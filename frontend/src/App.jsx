@@ -1,7 +1,7 @@
 import { useState } from "react";
-import LandingPage from "./pages/LandingPage";
-import DrawingPage from "./pages/DrawingPage";
-import WorldPage from "./pages/WorldPage";
+import LandingPage from "./pages/Landing";
+import DrawingPage from "./pages/Drawing";
+import WorldPage from "./pages/World";
 import "./App.css";
 
 function App() {
