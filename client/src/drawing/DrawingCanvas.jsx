@@ -141,6 +141,65 @@ export default function DrawingCanvas({ onComplete }) {
     setError("");
   };
 
+  const getTrimBounds = (canvas) => {
+    const ctx = canvas.getContext("2d");
+    const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let left = width;
+    let right = 0;
+    let top = height;
+    let bottom = 0;
+
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const alpha = data[(y * width + x) * 4 + 3];
+        if (alpha !== 0) {
+          if (x < left) left = x;
+          if (x > right) right = x;
+          if (y < top) top = y;
+          if (y > bottom) bottom = y;
+        }
+      }
+    }
+
+    if (bottom < top || right < left) {
+      return null;
+    }
+
+    return {
+      x: left,
+      y: top,
+      width: right - left + 1,
+      height: bottom - top + 1,
+    };
+  };
+
+  const getAlignedCanvas = (canvas) => {
+    const bounds = getTrimBounds(canvas);
+    if (!bounds) {
+      return canvas;
+    }
+
+    const alignedCanvas = document.createElement("canvas");
+    alignedCanvas.width = CANVAS_SIZE;
+    alignedCanvas.height = CANVAS_SIZE;
+    const ctx = alignedCanvas.getContext("2d");
+    const destX = bounds.x;
+    const destY = CANVAS_SIZE - bounds.height;
+
+    ctx.drawImage(
+      canvas,
+      bounds.x,
+      bounds.y,
+      bounds.width,
+      bounds.height,
+      destX,
+      destY,
+      bounds.width,
+      bounds.height
+    );
+    return alignedCanvas;
+  };
+
   // Check whether any pixel has non-zero alpha (i.e. canvas isn't blank)
   const isCanvasEmpty = () => {
     const canvas = canvasRef.current;
@@ -159,7 +218,9 @@ export default function DrawingCanvas({ onComplete }) {
     }
 
     const canvas = canvasRef.current;
-    canvas.toBlob((imageBlob) => {
+    const alignedCanvas = getAlignedCanvas(canvas);
+
+    alignedCanvas.toBlob((imageBlob) => {
       if (!imageBlob) {
         setError("Couldn't export your drawing. Try again.");
         return;
