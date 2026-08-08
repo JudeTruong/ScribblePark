@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import World from "./world/World";
+import DrawingCanvas from "./drawing/DrawingCanvas";
 
 function randomPlacement() {
   return {
@@ -14,24 +15,16 @@ function randomPlacement() {
 
 export default function App() {
   const [step, setStep] = useState("landing");
-  const [imageUrl, setImageUrl] = useState("");
   const [creations, setCreations] = useState([]);
 
-  const canSubmit = imageUrl.trim().length > 0;
-
-  function handleSubmit(event) {
-    event.preventDefault();
-
-    if (!canSubmit) return;
-
+  function handleAddDrawing({ previewUrl }) {
     const placement = randomPlacement();
-    const cleanedUrl = imageUrl.trim();
 
     const newCreation = {
       id: `entry-${Date.now()}`,
-      name: "Image entry",
-      description: "Added from image URL",
-      imageUrl: cleanedUrl,
+      name: "Flower",
+      description: "Hand-drawn flower",
+      imageUrl: previewUrl,
       position: placement.position,
       scale: placement.scale,
     };
@@ -69,12 +62,12 @@ export default function App() {
       <div style={cardStyle}>
         <p style={eyebrowStyle}>ScribblePark</p>
         <h1 style={{ margin: "0 0 12px", fontSize: "36px" }}>
-          {step === "landing" ? "Add something to the park" : "Use an image URL"}
+          {step === "landing" ? "Add something to the park" : "Draw and plant a flower"}
         </h1>
         <p style={{ margin: "0 0 24px", color: "#5f6f5f" }}>
           {step === "landing"
             ? "Start with a tiny idea and place it into the world."
-            : "Paste a direct image link and it will appear in the scene."}
+            : "Draw a flower, give it a name, and add it to the meadow."}
         </p>
 
         {step === "landing" ? (
@@ -82,36 +75,15 @@ export default function App() {
             Add something
           </button>
         ) : (
-          <form onSubmit={handleSubmit} style={{ display: "grid", gap: "12px" }}>
-            <input
-              type="url"
-              value={imageUrl}
-              onChange={(event) => setImageUrl(event.target.value)}
-              placeholder="https://example.com/image.png"
-              style={inputStyle}
-            />
-            {imageUrl.trim() && (
-              <img
-                src={imageUrl}
-                alt="Preview"
-                style={{
-                  width: "100%",
-                  maxHeight: "160px",
-                  objectFit: "cover",
-                  borderRadius: "12px",
-                  border: "1px solid #d7e0d0",
-                }}
-              />
-            )}
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button type="submit" disabled={!canSubmit} style={primaryButtonStyle}>
-                Place in world
-              </button>
+          <div style={{ display: "grid", gap: "24px" }}>
+            <DrawingCanvas onComplete={handleAddDrawing} />
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
               <button type="button" onClick={() => setStep("landing")} style={secondaryButtonStyle}>
                 Back
               </button>
             </div>
-          </form>
+          </div>
         )}
       </div>
     </div>

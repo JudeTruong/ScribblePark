@@ -20,14 +20,13 @@ const COLOR_PRESETS = [
 
 const BRUSH_SIZE = 2;
 
-export default function DrawingCanvas({ onComplete, showNameInput = true }) {
+export default function DrawingCanvas({ onComplete }) {
   const canvasRef = useRef(null);
   const isDrawingRef = useRef(false);
   const lastPointRef = useRef(null);
 
   const [tool, setTool] = useState("pencil"); // "pencil" | "eraser"
   const [color, setColor] = useState(COLOR_PRESETS[0]);
-  const [name, setName] = useState("");
   const [hasDrawn, setHasDrawn] = useState(false);
   const [error, setError] = useState("");
 
@@ -154,12 +153,6 @@ export default function DrawingCanvas({ onComplete, showNameInput = true }) {
   };
 
   const handleSubmit = () => {
-    const trimmedName = name.trim();
-
-    if (showNameInput && !trimmedName) {
-      setError("Give your flower a name before planting it.");
-      return;
-    }
     if (isCanvasEmpty()) {
       setError("Draw something before planting it.");
       return;
@@ -173,7 +166,6 @@ export default function DrawingCanvas({ onComplete, showNameInput = true }) {
       }
       const previewUrl = URL.createObjectURL(imageBlob);
       onComplete({
-        name: trimmedName,
         category: "flower",
         imageBlob,
         previewUrl,
@@ -247,23 +239,6 @@ export default function DrawingCanvas({ onComplete, showNameInput = true }) {
           aria-label="Custom color picker"
         />
       </div>
-
-      {showNameInput && (
-        <div style={styles.nameRow}>
-          <label htmlFor="flower-name" style={styles.label}>
-            Flower name
-          </label>
-          <input
-            id="flower-name"
-            type="text"
-            value={name}
-            maxLength={50}
-            placeholder="Sunny"
-            onChange={(e) => setName(e.target.value)}
-            style={styles.nameInput}
-          />
-        </div>
-      )}
 
       {error && <p style={styles.error}>{error}</p>}
 
