@@ -1,8 +1,78 @@
+import { useState } from "react";
 import World from "./world/World";
 
-export default function App() {
-  return <World creations={[]} />;
+function randomPlacement() {
+  return {
+    position: {
+      x: Math.random() * 8 - 4,
+      y: 0,
+      z: Math.random() * 5 - 2.5,
+    },
+    scale: 0.9 + Math.random() * 0.5,
+  };
 }
+
+export default function App() {
+  const [creations, setCreations] = useState([]);
+
+  function handlePngUpload(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (file.type !== "image/png") {
+      alert("Please select a PNG.");
+      return;
+    }
+
+    const placement = randomPlacement();
+
+    const newFlower = {
+      id: `test-${Date.now()}`,
+      name: file.name.replace(".png", ""),
+      category: "flower",
+      imageUrl: URL.createObjectURL(file),
+      position: placement.position,
+      scale: placement.scale,
+      isPending: true,
+    };
+
+    setCreations((current) => [...current, newFlower]);
+
+    // Allows selecting the same file again.
+    event.target.value = "";
+  }
+
+  return (
+    <div style={{ width: "100%", height: "100vh" }}>
+      <label style={uploadStyle}>
+        Plant PNG
+        <input
+          type="file"
+          accept="image/png"
+          onChange={handlePngUpload}
+          hidden
+        />
+      </label>
+
+      <World creations={creations} />
+    </div>
+  );
+}
+
+const uploadStyle = {
+  position: "fixed",
+  top: "20px",
+  right: "20px",
+  zIndex: 100,
+  padding: "12px 20px",
+  borderRadius: "999px",
+  background: "#fffdf4",
+  color: "#315638",
+  fontWeight: "700",
+  cursor: "pointer",
+  boxShadow: "0 6px 20px rgba(42, 74, 45, 0.22)",
+};
 /*
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
@@ -129,9 +199,3 @@ export default function App() {
 
 export default App
 */
-    <main className="starting-page">
-      <h1>ScribblePark</h1>
-      <p>Shared project foundation is running.</p>
-    </main>
-  );
-}
