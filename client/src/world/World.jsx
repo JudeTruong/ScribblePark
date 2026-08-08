@@ -1,97 +1,92 @@
 import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import {
+  OrbitControls,
+  PointerLockControls,
+} from "@react-three/drei";
+import {
+  EffectComposer,
+  Pixelation,
+} from "@react-three/postprocessing";
 import * as THREE from "three";
+
 import Environment from "./Environment";
 import Flower from "./Flower";
 
-const WIDE_POSITION = [0, 5.5, 11];
-const FIRST_PERSON_POSITION = [0, 1.4, 6];
+const WIDE_POSITION = [0, 9, 20];
+const FIRST_PERSON_POSITION = [0, 1.4, 10];
+const GROUND_HEIGHT = 1.4;
+const WORLD_BOUNDARY = 14;
 
 function FirstPersonController({ active }) {
-  const { camera, gl } = useThree();
+  const { camera } = useThree();
+
   const keys = useRef({});
-  const dragging = useRef(false);
-  const previousMouse = useRef({ x: 0, y: 0 });
+  const verticalPosition = useRef(GROUND_HEIGHT);
+  const verticalVelocity = useRef(0);
+  const grounded = useRef(true);
+  const bobTime = useRef(0);
 
   useEffect(() => {
     if (!active) return;
 
     camera.position.set(...FIRST_PERSON_POSITION);
     camera.rotation.order = "YXZ";
-    camera.lookAt(0, 1.4, 0);
+    camera.lookAt(0, GROUND_HEIGHT, 0);
+
+    verticalPosition.current = GROUND_HEIGHT;
+    verticalVelocity.current = 0;
+    grounded.current = true;
+    bobTime.current = 0;
 
     function handleKeyDown(event) {
       keys.current[event.code] = true;
+
+      if (
+        event.code === "Space" &&
+        grounded.current &&
+        !event.repeat
+      ) {
+        verticalVelocity.current = 5;
+        grounded.current = false;
+      }
+
+      if (
+        event.code === "Space" ||
+        event.code.startsWith("Arrow")
+      ) {
+        event.preventDefault();
+      }
     }
 
     function handleKeyUp(event) {
       keys.current[event.code] = false;
     }
 
-    function handleMouseDown(event) {
-      if (event.button !== 0) return;
-
-      dragging.current = true;
-      previousMouse.current = {
-        x: event.clientX,
-        y: event.clientY,
-      };
-    }
-
-    function handleMouseUp() {
-      dragging.current = false;
-    }
-
-    function handleMouseMove(event) {
-      if (!dragging.current) return;
-
-      const movementX = event.clientX - previousMouse.current.x;
-      const movementY = event.clientY - previousMouse.current.y;
-
-      previousMouse.current = {
-        x: event.clientX,
-        y: event.clientY,
-      };
-
-      camera.rotation.y -= movementX * 0.003;
-      camera.rotation.x -= movementY * 0.003;
-
-      camera.rotation.x = THREE.MathUtils.clamp(
-        camera.rotation.x,
-        -Math.PI / 2.4,
-        Math.PI / 2.4
-      );
-    }
-
-    const canvas = gl.domElement;
-
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-    window.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("mousemove", handleMouseMove);
-    canvas.addEventListener("mousedown", handleMouseDown);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
-      window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("mousemove", handleMouseMove);
-      canvas.removeEventListener("mousedown", handleMouseDown);
 
       keys.current = {};
-      dragging.current = false;
     };
-  }, [active, camera, gl]);
+  }, [active, camera]);
 
   useFrame((_, delta) => {
     if (!active) return;
 
-    const speed = 3.5;
-    const movement = new THREE.Vector3();
+    const safeDelta = Math.min(delta, 0.1);
+    const movementSpeed = 4.5;
+    const gravity = 12;
 
+    const movement = new THREE.Vector3();
     const forward = new THREE.Vector3();
+
     camera.getWorldDirection(forward);
+
+    // Ignore camera tilt when calculating movement.
     forward.y = 0;
     forward.normalize();
 
@@ -115,13 +110,42 @@ function FirstPersonController({ active }) {
       movement.sub(right);
     }
 
-    if (movement.lengthSq() > 0) {
-      movement.normalize().multiplyScalar(speed * delta);
-      camera.position.add(movement);
+    const isWalking = movement.lengthSq() > 0;
+
+    if (isWalking) {
+      movement
+        .normalize()
+        .multiplyScalar(movementSpeed * safeDelta);
+
+      camera.position.x += movement.x;
+      camera.position.z += movement.z;
     }
 
-    // Keep the camera at eye height.
-    camera.position.y = 1.4;
+    // Apply gravity.
+    verticalVelocity.current -= gravity * safeDelta;
+
+    verticalPosition.current +=
+      verticalVelocity.current * safeDelta;
+
+    // Stop at the ground.
+    if (verticalPosition.current <= GROUND_HEIGHT) {
+      verticalPosition.current = GROUND_HEIGHT;
+      verticalVelocity.current = 0;
+      grounded.current = true;
+    }
+
+    // Slight up-and-down movement while walking.
+    let headBob = 0;
+
+    if (isWalking && grounded.current) {
+      bobTime.current += safeDelta * 10;
+      headBob = Math.sin(bobTime.current) * 0.045;
+    } else {
+      bobTime.current = 0;
+    }
+
+    camera.position.y =
+      verticalPosition.current + headBob;
 
     // Keep the player inside the meadow.
     const distanceFromCentre = Math.hypot(
@@ -129,11 +153,17 @@ function FirstPersonController({ active }) {
       camera.position.z
     );
 
-    if (distanceFromCentre > 7.2) {
-      const angle = Math.atan2(camera.position.z, camera.position.x);
+    if (distanceFromCentre > WORLD_BOUNDARY) {
+      const angle = Math.atan2(
+        camera.position.z,
+        camera.position.x
+      );
 
-      camera.position.x = Math.cos(angle) * 7.2;
-      camera.position.z = Math.sin(angle) * 7.2;
+      camera.position.x =
+        Math.cos(angle) * WORLD_BOUNDARY;
+
+      camera.position.z =
+        Math.sin(angle) * WORLD_BOUNDARY;
     }
   });
 
@@ -144,11 +174,12 @@ function CameraReset({ mode }) {
   const { camera } = useThree();
 
   useEffect(() => {
-    if (mode === "wide") {
-      camera.position.set(...WIDE_POSITION);
-      camera.rotation.set(0, 0, 0);
-      camera.lookAt(0, 1, 0);
-    }
+    if (mode !== "wide") return;
+
+    camera.position.set(...WIDE_POSITION);
+    camera.rotation.order = "XYZ";
+    camera.rotation.set(0, 0, 0);
+    camera.lookAt(0, 1, 0);
   }, [mode, camera]);
 
   return null;
@@ -156,7 +187,32 @@ function CameraReset({ mode }) {
 
 export default function World({ creations = [] }) {
   const [mode, setMode] = useState("wide");
+  const canvasElement = useRef(null);
+
   const firstPerson = mode === "firstPerson";
+
+  function enterFirstPerson() {
+    setMode("firstPerson");
+
+    if (canvasElement.current) {
+      const lockRequest =
+        canvasElement.current.requestPointerLock();
+
+      if (lockRequest?.catch) {
+        lockRequest.catch((error) => {
+          console.error("Could not lock pointer:", error);
+        });
+      }
+    }
+  }
+
+  function returnToWideView() {
+    setMode("wide");
+
+    if (document.pointerLockElement) {
+      document.exitPointerLock();
+    }
+  }
 
   return (
     <div
@@ -164,8 +220,10 @@ export default function World({ creations = [] }) {
         position: "relative",
         width: "100%",
         height: "100vh",
+        overflow: "hidden",
       }}
     >
+      {/* Screen controls */}
       <div
         style={{
           position: "absolute",
@@ -179,23 +237,13 @@ export default function World({ creations = [] }) {
         }}
       >
         {firstPerson ? (
-          <>
-            <button
-              type="button"
-              onClick={() => setMode("wide")}
-              style={buttonStyle}
-            >
-              Wide View
-            </button>
-
-            <div style={instructionsStyle}>
-              WASD to move · Hold and drag to look
-            </div>
-          </>
+          <div style={instructionsStyle}>
+            WASD to move · Mouse to look · Space to jump · Esc for wide view
+          </div>
         ) : (
           <button
             type="button"
-            onClick={() => setMode("firstPerson")}
+            onClick={enterFirstPerson}
             style={buttonStyle}
           >
             Enter Meadow
@@ -206,6 +254,9 @@ export default function World({ creations = [] }) {
       <Canvas
         shadows
         dpr={[1, 1.5]}
+        onCreated={({ gl }) => {
+          canvasElement.current = gl.domElement;
+        }}
         gl={{
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,
@@ -213,13 +264,14 @@ export default function World({ creations = [] }) {
         }}
         camera={{
           position: WIDE_POSITION,
-          fov: 42,
+          fov: 45,
           near: 0.1,
-          far: 100,
+          far: 150,
         }}
       >
         <Environment />
 
+        {/* User-created billboard flowers */}
         {creations.map((creation) => (
           <Flower
             key={creation.id}
@@ -231,21 +283,32 @@ export default function World({ creations = [] }) {
         ))}
 
         <CameraReset mode={mode} />
+
         <FirstPersonController active={firstPerson} />
 
+        {/* Unlimited first-person mouse movement */}
+        <PointerLockControls
+          enabled={firstPerson}
+          onUnlock={returnToWideView}
+        />
+
+        {/* Wide-view camera controls */}
         <OrbitControls
           enabled={!firstPerson}
           target={[0, 1, 0]}
           enablePan={false}
           enableDamping
           dampingFactor={0.06}
-          minDistance={6}
-          maxDistance={14}
+          minDistance={10}
+          maxDistance={28}
           minPolarAngle={Math.PI / 4.5}
           maxPolarAngle={Math.PI / 2.15}
-          minAzimuthAngle={-Math.PI / 3}
-          maxAzimuthAngle={Math.PI / 3}
         />
+
+        {/* Pixelates the complete 3D scene */}
+        <EffectComposer multisampling={0}>
+          <Pixelation granularity={4} />
+        </EffectComposer>
       </Canvas>
     </div>
   );
