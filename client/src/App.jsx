@@ -12,7 +12,9 @@ import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
+import "./App.css";
 
+export default function App() {
   return (
     <>
       <section id="center">
@@ -127,3 +129,9 @@ function App() {
 
 export default App
 */
+    <main className="starting-page">
+      <h1>ScribblePark</h1>
+      <p>Shared project foundation is running.</p>
+    </main>
+  );
+}
