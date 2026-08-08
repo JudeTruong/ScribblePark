@@ -11,22 +11,39 @@ export default function Flower({
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.NearestFilter;
+  texture.generateMipmaps = false;
 
   return (
-    <Billboard
-      position={[position.x, 0.65 * scale, position.z]}
-      follow
-    >
-      <mesh scale={scale}>
-        <planeGeometry args={[1.3, 1.3]} />
-
-        <meshStandardMaterial
-          map={texture}
+    <group position={[position.x, 0, position.z]}>
+      {/* Small grounding shadow */}
+      <mesh
+        position={[0, 0.015, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={scale}
+      >
+        <circleGeometry args={[0.32, 24]} />
+        <meshBasicMaterial
+          color="#365e35"
           transparent
-          alphaTest={0.1}
-          side={THREE.DoubleSide}
+          opacity={0.22}
+          depthWrite={false}
         />
       </mesh>
-    </Billboard>
+
+      {/* User drawing */}
+      <Billboard position={[0, 0.75 * scale, 0]} follow>
+        <mesh scale={scale}>
+          <planeGeometry args={[1.5, 1.5]} />
+
+          <meshBasicMaterial
+            map={texture}
+            transparent
+            alphaTest={0.05}
+            side={THREE.DoubleSide}
+            toneMapped={false}
+          />
+        </mesh>
+      </Billboard>
+    </group>
   );
 }
