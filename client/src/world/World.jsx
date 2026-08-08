@@ -4,10 +4,6 @@ import {
   OrbitControls,
   PointerLockControls,
 } from "@react-three/drei";
-import {
-  EffectComposer,
-  Pixelation,
-} from "@react-three/postprocessing";
 import * as THREE from "three";
 
 import Environment from "./Environment";
@@ -256,6 +252,8 @@ export default function World({ creations = [] }) {
         dpr={[1, 1.5]}
         onCreated={({ gl }) => {
           canvasElement.current = gl.domElement;
+          gl.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1));
+          gl.domElement.style.imageRendering = "pixelated";
         }}
         gl={{
           antialias: true,
@@ -305,10 +303,6 @@ export default function World({ creations = [] }) {
           maxPolarAngle={Math.PI / 2.15}
         />
 
-        {/* Pixelates the complete 3D scene */}
-        <EffectComposer multisampling={0}>
-          <Pixelation granularity={4} />
-        </EffectComposer>
       </Canvas>
     </div>
   );

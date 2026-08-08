@@ -49,11 +49,15 @@ export default function App() {
     return (
       <div style={{ width: "100%", height: "100vh" }}>
         <div style={floatingCardStyle}>
-          <h2 style={{ margin: "0 0 8px" }}>Your park is growing</h2>
-          <p style={{ margin: 0 }}>{summary}</p>
-          <button onClick={() => setStep("landing")} style={secondaryButtonStyle}>
-            Add another
-          </button>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "flex-start" }}>
+            <div>
+              <h2 style={{ margin: "0 0 8px" }}>Your park is growing</h2>
+              <p style={{ margin: 0 }}>{summary}</p>
+            </div>
+            <button onClick={() => setStep("form")} style={secondaryButtonStyle}>
+              Add another
+            </button>
+          </div>
         </div>
         <World creations={creations} />
       </div>
@@ -166,12 +170,12 @@ const inputStyle = {
 const floatingCardStyle = {
   position: "fixed",
   top: "20px",
-  left: "20px",
+  right: "20px",
   zIndex: 20,
   background: "rgba(255, 253, 244, 0.95)",
   padding: "16px 18px",
   borderRadius: "16px",
   boxShadow: "0 10px 28px rgba(33, 53, 35, 0.16)",
-  maxWidth: "260px",
+  maxWidth: "300px",
 };
 
