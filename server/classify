@@ -2,25 +2,15 @@ from transformers import pipeline
 from PIL import Image
 
 MODEL_NAME = "kmewhort/beit-sketch-classifier"
-IMAGE_PATH = "test_drawing.png"
-
-print("Loading model...")
 
 classifier = pipeline(
     "image-classification",
     model=MODEL_NAME
 )
 
-print("Loading drawing...")
+def classify_image(image):
+    image = image.convert("RGB")
 
-image = Image.open(IMAGE_PATH).convert("RGB")
+    results = classifier(image, top_k=5)
 
-results = classifier(image, top_k=5)
-
-print("\nPredictions:")
-
-for result in results:
-    print(
-        f"{result['label']}: "
-        f"{result['score']:.2%}"
-    )
+    return results
