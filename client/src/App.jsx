@@ -14,11 +14,10 @@ function randomPlacement() {
 
 export default function App() {
   const [step, setStep] = useState("landing");
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [creations, setCreations] = useState([]);
 
-  const canSubmit = name.trim().length > 0;
+  const canSubmit = imageUrl.trim().length > 0;
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -26,12 +25,13 @@ export default function App() {
     if (!canSubmit) return;
 
     const placement = randomPlacement();
+    const cleanedUrl = imageUrl.trim();
 
     const newCreation = {
       id: `entry-${Date.now()}`,
-      name: name.trim(),
-      description: description.trim(),
-      imageUrl: "https://images.unsplash.com/photo-1468327768560-75b778cbb551?auto=format&fit=crop&w=600&q=80",
+      name: "Image entry",
+      description: "Added from image URL",
+      imageUrl: cleanedUrl,
       position: placement.position,
       scale: placement.scale,
     };
@@ -69,12 +69,12 @@ export default function App() {
       <div style={cardStyle}>
         <p style={eyebrowStyle}>ScribblePark</p>
         <h1 style={{ margin: "0 0 12px", fontSize: "36px" }}>
-          {step === "landing" ? "Add something to the park" : "Draw your idea"}
+          {step === "landing" ? "Add something to the park" : "Use an image URL"}
         </h1>
         <p style={{ margin: "0 0 24px", color: "#5f6f5f" }}>
           {step === "landing"
             ? "Start with a tiny idea and place it into the world."
-            : "Write a name and a short note, then send it into the scene."}
+            : "Paste a direct image link and it will appear in the scene."}
         </p>
 
         {step === "landing" ? (
@@ -84,18 +84,25 @@ export default function App() {
         ) : (
           <form onSubmit={handleSubmit} style={{ display: "grid", gap: "12px" }}>
             <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Name your creation"
+              type="url"
+              value={imageUrl}
+              onChange={(event) => setImageUrl(event.target.value)}
+              placeholder="https://example.com/image.png"
               style={inputStyle}
             />
-            <textarea
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              placeholder="What did you draw?"
-              rows={4}
-              style={{ ...inputStyle, resize: "vertical", minHeight: "90px" }}
-            />
+            {imageUrl.trim() && (
+              <img
+                src={imageUrl}
+                alt="Preview"
+                style={{
+                  width: "100%",
+                  maxHeight: "160px",
+                  objectFit: "cover",
+                  borderRadius: "12px",
+                  border: "1px solid #d7e0d0",
+                }}
+              />
+            )}
             <div style={{ display: "flex", gap: "10px" }}>
               <button type="submit" disabled={!canSubmit} style={primaryButtonStyle}>
                 Place in world
