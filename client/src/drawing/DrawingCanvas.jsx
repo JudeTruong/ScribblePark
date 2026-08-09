@@ -27,13 +27,17 @@ export default function DrawingCanvas({ onComplete }) {
   const isDrawingRef = useRef(false);
   const lastPointRef = useRef(null);
 
-  const [tool, setTool] = useState("pencil"); // "pencil" | "eraser" | "fill"
-  const [color, setColor] = useState(COLOR_PRESETS[0]);
+  const [tool, setTool] = useState("pencil"); // "pencil" | "eraser"
+  const [phase, setPhase] = useState("outline");
+  const [color, setColor] = useState(COLOR_PRESETS[1]);
   const [creatorName, setCreatorName] = useState("");
   const [hasDrawn, setHasDrawn] = useState(false);
+  const [hasColoring, setHasColoring] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [classificationState, setClassificationState] = useState("idle");
+  const [classificationResult, setClassificationResult] = useState(null);
   const isSubmittingRef = useRef(false);
 
   // Load the shared page font (no-op if DrawingScreen already loaded it)
@@ -91,18 +95,15 @@ export default function DrawingCanvas({ onComplete }) {
     [drawDot]
   );
 
-  const applyToolSettings = useCallback(
-    (ctx) => {
-      if (tool === "eraser") {
-        ctx.globalCompositeOperation = "destination-out";
-        ctx.fillStyle = "rgba(0,0,0,1)";
-      } else {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.fillStyle = color;
-      }
-    },
-    [color, tool]
-  );
+  const applyToolSettings = useCallback((ctx, activeColor, activeTool) => {
+    if (activeTool === "eraser") {
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0,0,0,1)";
+    } else {
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = activeColor;
+    }
+  }, []);
 
   const hexToRgb = (hex) => {
     const normalized = hex.replace("#", "");
@@ -218,40 +219,53 @@ export default function DrawingCanvas({ onComplete }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const point = getCanvasPoint(clientX, clientY);
+    const isOutlinePhase = phase === "outline";
+    const activeColor = isOutlinePhase ? "#000000" : color;
+    const shouldDrawToLineCanvas = isOutlinePhase;
 
-    if (tool === "fill") {
-      floodFill(point.x, point.y);
-      return;
-    }
-
-    applyToolSettings(ctx);
+    applyToolSettings(ctx, activeColor, tool);
     drawDot(ctx, point.x, point.y);
 
-    const lineCtx = lineCanvasRef.current?.getContext("2d");
-    if (lineCtx) {
-      applyToolSettings(lineCtx);
-      drawDot(lineCtx, point.x, point.y);
+    if (shouldDrawToLineCanvas) {
+      const lineCtx = lineCanvasRef.current?.getContext("2d");
+      if (lineCtx) {
+        applyToolSettings(lineCtx, "#000000", tool);
+        drawDot(lineCtx, point.x, point.y);
+      }
     }
 
     isDrawingRef.current = true;
     lastPointRef.current = point;
     setHasDrawn(true);
     setError("");
+
+    if (!isOutlinePhase && tool === "pencil" && activeColor !== "#000000") {
+      setHasColoring(true);
+    }
   };
 
   const handlePointerMove = (clientX, clientY) => {
-    if (!isDrawingRef.current || tool === "fill") return;
+    if (!isDrawingRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const point = getCanvasPoint(clientX, clientY);
+    const isOutlinePhase = phase === "outline";
+    const activeColor = isOutlinePhase ? "#000000" : color;
+    const shouldDrawToLineCanvas = isOutlinePhase;
 
-    applyToolSettings(ctx);
+    applyToolSettings(ctx, activeColor, tool);
     drawLine(ctx, lastPointRef.current, point);
 
-    const lineCtx = lineCanvasRef.current?.getContext("2d");
-    if (lineCtx) {
-      applyToolSettings(lineCtx);
-      drawLine(lineCtx, lastPointRef.current, point);
+    if (shouldDrawToLineCanvas) {
+      const lineCtx = lineCanvasRef.current?.getContext("2d");
+      if (lineCtx) {
+        applyToolSettings(lineCtx, "#000000", tool);
+        drawLine(lineCtx, lastPointRef.current, point);
+      }
+    }
+
+    if (!isOutlinePhase && tool === "pencil" && activeColor !== "#000000") {
+      setHasColoring(true);
     }
 
     lastPointRef.current = point;
@@ -288,8 +302,66 @@ export default function DrawingCanvas({ onComplete }) {
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     const lineCtx = lineCanvasRef.current?.getContext("2d");
     lineCtx?.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    setPhase("outline");
     setHasDrawn(false);
+    setHasColoring(false);
     setError("");
+    setClassificationState("idle");
+    setClassificationResult(null);
+  };
+
+  const handleNextStage = () => {
+    if (!hasDrawn || isLineCanvasEmpty()) {
+      setError("Draw the outline first before moving on.");
+      return;
+    }
+
+    setError("");
+    setPhase("color");
+    setClassificationState("classifying");
+    setClassificationResult(null);
+
+    const canvas = lineCanvasRef.current;
+    const alignedLineCanvas = getAlignedCanvas(canvas || canvasRef.current);
+    const classifierCanvas = getLineArtCanvas(alignedLineCanvas);
+
+    const classifierBlob = new Promise((resolve, reject) => {
+      classifierCanvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Couldn't export classifier image."));
+          return;
+        }
+        resolve(blob);
+      }, "image/png");
+    });
+
+    classifierBlob
+      .then(async (blob) => {
+        const formData = new FormData();
+        formData.append("file", blob, "drawing-white.png");
+
+        const response = await fetch("http://localhost:8000/api/classify", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error("Classifier rejected the request.");
+        }
+
+        const result = await response.json();
+        const predictions = result?.predictions ?? [];
+        const type = result?.type ?? predictions?.[0]?.label ?? null;
+        const confidence = result?.confidence ?? predictions?.[0]?.score ?? null;
+
+        setClassificationResult({ type, confidence, predictions });
+        setClassificationState("ready");
+      })
+      .catch((fetchError) => {
+        console.warn("[DrawingCanvas] Outline classification failed:", fetchError);
+        setClassificationState("error");
+        setClassificationResult(null);
+      });
   };
 
   useEffect(() => {
@@ -424,7 +496,15 @@ export default function DrawingCanvas({ onComplete }) {
       return;
     }
     if (isLineCanvasEmpty()) {
-      setError("Draw black lines before planting it.");
+      setError("Draw the black outline first before planting it.");
+      return;
+    }
+    if (phase !== "color") {
+      setError("Finish the color step before planting it.");
+      return;
+    }
+    if (!hasColoring) {
+      setError("Add color in the second step before planting it.");
       return;
     }
 
@@ -482,10 +562,9 @@ export default function DrawingCanvas({ onComplete }) {
     const formData = new FormData();
     formData.append("file", classifierBlob, "drawing-white.png");
 
-    let type = null;
-    let confidence = null;
-    let predictions = [];
-    let responseOk = false;
+    let type = classificationResult?.type ?? null;
+    let confidence = classificationResult?.confidence ?? null;
+    let predictions = classificationResult?.predictions ?? [];
 
     try {
       const response = await fetch(`${CLASSIFIER_URL}/api/classify`, {
@@ -493,25 +572,22 @@ export default function DrawingCanvas({ onComplete }) {
         body: formData,
       });
 
-      responseOk = response.ok;
-      const result = await response.json();
+        if (!response.ok) {
+          throw new Error("Classifier rejected the request.");
+        }
 
-      predictions = result?.predictions ?? [];
-      type = result?.type ?? predictions?.[0]?.label ?? null;
-      confidence = result?.confidence ?? predictions?.[0]?.score ?? null;
-    } catch (fetchError) {
-      console.warn("[DrawingCanvas] Classification request failed:", fetchError);
-      setError("Could not classify drawing. Please try again.");
-      setIsSubmitting(false);
-      isSubmittingRef.current = false;
-      return;
-    }
+        const result = await response.json();
 
-    if (!responseOk) {
-      setError("Classifier rejected the request. Check backend and try again.");
-      setIsSubmitting(false);
-      isSubmittingRef.current = false;
-      return;
+        predictions = result?.predictions ?? [];
+        type = result?.type ?? predictions?.[0]?.label ?? null;
+        confidence = result?.confidence ?? predictions?.[0]?.score ?? null;
+      } catch (fetchError) {
+        console.warn("[DrawingCanvas] Classification request failed:", fetchError);
+        setError("Could not classify drawing. Please try again.");
+        setIsSubmitting(false);
+        isSubmittingRef.current = false;
+        return;
+      }
     }
 
     setLoadingProgress(100);
@@ -543,6 +619,18 @@ export default function DrawingCanvas({ onComplete }) {
         />
       </div>
 
+      <div style={styles.stageRow}>
+        <div style={styles.stageBadge}>
+          {phase === "outline" ? "1. Draw the outline" : "2. Color it in"}
+        </div>
+      </div>
+
+      <p style={styles.stageHint}>
+        {phase === "outline"
+          ? "Draw the outline (black only). When you’re done, tap Next to move on."
+          : "Add color on top of the outline, around or inside!"}
+      </p>
+
       <div style={styles.toolRow}>
         <button
           type="button"
@@ -558,71 +646,79 @@ export default function DrawingCanvas({ onComplete }) {
         >
           Eraser
         </button>
-        <button
-          type="button"
-          onClick={() => setTool("fill")}
-          style={{ ...styles.toolButton, ...(tool === "fill" ? styles.toolButtonActive : {}) }}
-        >
-          Fill
-        </button>
         <button type="button" onClick={handleClear} style={styles.toolButton}>
           Clear
         </button>
       </div>
 
-      <div style={styles.paletteRow}>
-        {COLOR_PRESETS.map((preset) => (
-          <button
-            key={preset}
-            type="button"
-            aria-label={`Select color ${preset}`}
-            title={preset}
-            onClick={() => {
-              setColor(preset);
-            }}
-            style={{
-              ...styles.swatch,
-              backgroundColor: preset,
-              ...(color === preset && tool === "fill" ? styles.swatchActive : {}),
-            }}
-          />
-        ))}
+      {phase === "color" && (
+        <div style={styles.paletteRow}>
+          {COLOR_PRESETS.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              aria-label={`Select color ${preset}`}
+              title={preset}
+              onClick={() => {
+                setColor(preset);
+              }}
+              style={{
+                ...styles.swatch,
+                backgroundColor: preset,
+                ...(color === preset ? styles.swatchActive : {}),
+              }}
+            />
+          ))}
 
-        <label style={styles.customColorLabel} title="Pick a custom color">
-          <span style={styles.customColorSwatch}>🎨</span>
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => {
-              setColor(e.target.value);
-            }}
-            style={styles.colorInput}
-            aria-label="Custom color picker"
-          />
-        </label>
-      </div>
+          <label style={styles.customColorLabel} title="Pick a custom color">
+            <span style={styles.customColorSwatch}>🎨</span>
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => {
+                setColor(e.target.value);
+              }}
+              style={styles.colorInput}
+              aria-label="Custom color picker"
+            />
+          </label>
+        </div>
+      )}
 
       {error && <p style={styles.error}>{error}</p>}
 
-      <div style={styles.plantRow}>
-        <input
-          type="text"
-          value={creatorName}
-          onChange={(event) => setCreatorName(event.target.value)}
-          maxLength={50}
-          placeholder="Name it (optional)"
-          style={styles.nameInput}
-        />
+      {phase === "color" ? (
+        <div style={styles.plantRow}>
+          <input
+            type="text"
+            value={creatorName}
+            onChange={(event) => setCreatorName(event.target.value)}
+            maxLength={50}
+            placeholder="Name it (optional)"
+            style={styles.nameInput}
+          />
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!hasDrawn || isSubmitting}
-          style={{ ...styles.plantButton, ...((!hasDrawn || isSubmitting) ? styles.plantButtonDisabled : {}) }}
-        >
-          {isSubmitting ? "Planting..." : "Plant in World"}
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!hasDrawn || !hasColoring || isSubmitting}
+            style={{ ...styles.plantButton, ...((!hasDrawn || !hasColoring || isSubmitting) ? styles.plantButtonDisabled : {}) }}
+          >
+            {isSubmitting ? "Planting..." : "Plant in World"}
+          </button>
+        </div>
+      ) : (
+        <div style={styles.plantRow}>
+          <button
+            type="button"
+            onClick={handleNextStage}
+            disabled={!hasDrawn || isLineCanvasEmpty() || isSubmitting}
+            style={{ ...styles.nextButton, ...((!hasDrawn || isLineCanvasEmpty() || isSubmitting) ? styles.nextButtonDisabled : {}) }}
+          >
+            Next →
+          </button>
+        </div>
+      )}
 
       {isSubmitting && (
         <div style={styles.loadingBarBackground}>
@@ -658,6 +754,51 @@ const styles = {
     touchAction: "none",
     display: "block",
     boxShadow: "inset 0 0 0 2px rgba(255,255,255,0.8)",
+  },
+  stageRow: {
+    display: "flex",
+    gap: "8px",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  nextButton: {
+    padding: "12px 28px",
+    borderRadius: "8px",
+    border: "2px solid #4d6b3b",
+    background: "#5d8f4a",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontWeight: 600,
+    fontFamily: "'Fredoka', system-ui, sans-serif",
+    flex: "0 0 auto",
+  },
+  nextButtonDisabled: {
+    background: "#a5d6a7",
+    cursor: "not-allowed",
+  },
+  stageButton: {
+    padding: "8px 14px",
+    borderRadius: "999px",
+    border: "2px solid #4d6b3b",
+    background: "#fffdf7",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontFamily: "'Fredoka', system-ui, sans-serif",
+    fontWeight: 600,
+    color: "#315638",
+  },
+  stageButtonActive: {
+    background: "#5d8f4a",
+    color: "#fff",
+    borderColor: "#4d6b3b",
+  },
+  stageHint: {
+    margin: 0,
+    fontSize: "13px",
+    color: "#5c6650",
+    textAlign: "center",
+    maxWidth: `${DISPLAY_SIZE}px`,
   },
   toolRow: { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" },
   toolButton: {
