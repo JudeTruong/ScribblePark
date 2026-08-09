@@ -115,7 +115,7 @@ const CLASS_INFO = {
   fruit: {
     label: "Fruit",
     description:
-      "Ripe and hanging from a branch - part of the park's harvest.",
+      "Fallen ripe from the branches above - part of the park's harvest.",
   },
 
   landfill: {
