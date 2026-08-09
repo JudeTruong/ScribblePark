@@ -1,4 +1,4 @@
-// Maps every raw QuickDraw-style model label to one of ScribblePark's
+﻿// Maps every raw QuickDraw-style model label to one of ScribblePark's
 // park-friendly big categories. Lookup is case-insensitive — lowercase
 // the incoming label before checking this map.
 //
@@ -28,12 +28,12 @@ export const CATEGORY_MAP = {
   "animal migration": "bird",
   "ant": "bug",
   "anvil": "landfill",
-  "apple": "landfill",
+  "apple": "fruit",
   "arm": "landfill",
   "asparagus": "landfill",
   "axe": "landfill",
   "backpack": "landfill",
-  "banana": "landfill",
+  "banana": "fruit",
   "bandage": "landfill",
   "barn": "landfill",
   "baseball": "landfill",
@@ -43,7 +43,7 @@ export const CATEGORY_MAP = {
   "bat": "bird",
   "bathtub": "landfill",
   "beach": "landfill",
-  "bear": "rabbit",
+  "bear": "mammal",
   "beard": "landfill",
   "bed": "landfill",
   "bee": "butterfly",
@@ -53,8 +53,8 @@ export const CATEGORY_MAP = {
   "binoculars": "landfill",
   "bird": "bird",
   "birthday cake": "landfill",
-  "blackberry": "landfill",
-  "blueberry": "landfill",
+  "blackberry": "fruit",
+  "blueberry": "fruit",
   "book": "landfill",
   "boomerang": "landfill",
   "bottlecap": "landfill",
@@ -74,7 +74,7 @@ export const CATEGORY_MAP = {
   "cake": "landfill",
   "calculator": "landfill",
   "calendar": "landfill",
-  "camel": "rabbit",
+  "camel": "mammal",
   "camera": "landfill",
   "camouflage": "landfill",
   "campfire": "landfill",
@@ -84,7 +84,7 @@ export const CATEGORY_MAP = {
   "car": "landfill",
   "carrot": "landfill",
   "castle": "landfill",
-  "cat": "rabbit",
+  "cat": "mammal",
   "ceiling fan": "landfill",
   "cello": "landfill",
   "cell phone": "landfill",
@@ -101,7 +101,7 @@ export const CATEGORY_MAP = {
   "cookie": "landfill",
   "cooler": "landfill",
   "couch": "landfill",
-  "cow": "rabbit",
+  "cow": "mammal",
   "crab": "bug",
   "crayon": "landfill",
   "crocodile": "toad",
@@ -111,11 +111,11 @@ export const CATEGORY_MAP = {
   "diamond": "landfill",
   "dishwasher": "landfill",
   "diving board": "landfill",
-  "dog": "rabbit",
+  "dog": "mammal",
   "dolphin": "fish",
   "donut": "landfill",
   "door": "landfill",
-  "dragon": "landfill",
+  "dragon": "mammal",
   "dresser": "landfill",
   "drill": "landfill",
   "drums": "landfill",
@@ -123,7 +123,7 @@ export const CATEGORY_MAP = {
   "dumbbell": "landfill",
   "ear": "landfill",
   "elbow": "landfill",
-  "elephant": "rabbit",
+  "elephant": "mammal",
   "envelope": "landfill",
   "eraser": "landfill",
   "eye": "landfill",
@@ -149,10 +149,10 @@ export const CATEGORY_MAP = {
   "frying pan": "landfill",
   "garden": "flower",
   "garden hose": "landfill",
-  "giraffe": "rabbit",
+  "giraffe": "mammal",
   "goatee": "landfill",
   "golf club": "landfill",
-  "grapes": "landfill",
+  "grapes": "fruit",
   "grass": "bush",
   "guitar": "landfill",
   "hamburger": "landfill",
@@ -167,7 +167,7 @@ export const CATEGORY_MAP = {
   "hexagon": "landfill",
   "hockey puck": "landfill",
   "hockey stick": "landfill",
-  "horse": "rabbit",
+  "horse": "mammal",
   "hospital": "landfill",
   "hot air balloon": "landfill",
   "hot dog": "landfill",
@@ -179,7 +179,7 @@ export const CATEGORY_MAP = {
   "ice cream": "landfill",
   "jacket": "landfill",
   "jail": "landfill",
-  "kangaroo": "rabbit",
+  "kangaroo": "mammal",
   "key": "landfill",
   "keyboard": "landfill",
   "knee": "landfill",
@@ -194,7 +194,7 @@ export const CATEGORY_MAP = {
   "lighthouse": "landfill",
   "lightning": "landfill",
   "line": "landfill",
-  "lion": "rabbit",
+  "lion": "mammal",
   "lipstick": "landfill",
   "lobster": "bug",
   "lollipop": "landfill",
@@ -203,15 +203,15 @@ export const CATEGORY_MAP = {
   "marker": "landfill",
   "matches": "landfill",
   "megaphone": "landfill",
-  "mermaid": "landfill",
+  "mermaid": "mammal",
   "microphone": "landfill",
   "microwave": "landfill",
-  "monkey": "rabbit",
+  "monkey": "mammal",
   "moon": "landfill",
   "mosquito": "bug",
   "motorbike": "landfill",
   "mountain": "landfill",
-  "mouse": "rabbit",
+  "mouse": "mammal",
   "moustache": "landfill",
   "mouth": "landfill",
   "mug": "landfill",
@@ -228,23 +228,23 @@ export const CATEGORY_MAP = {
   "paintbrush": "landfill",
   "paint can": "landfill",
   "palm tree": "tree",
-  "panda": "rabbit",
+  "panda": "mammal",
   "pants": "landfill",
   "paper clip": "landfill",
   "parachute": "landfill",
   "parrot": "bird",
   "passport": "landfill",
   "peanut": "landfill",
-  "pear": "landfill",
+  "pear": "fruit",
   "peas": "landfill",
   "pencil": "landfill",
   "penguin": "bird",
   "piano": "landfill",
   "pickup truck": "landfill",
   "picture frame": "landfill",
-  "pig": "rabbit",
+  "pig": "mammal",
   "pillow": "landfill",
-  "pineapple": "landfill",
+  "pineapple": "fruit",
   "pizza": "landfill",
   "pliers": "landfill",
   "police car": "landfill",
@@ -256,13 +256,13 @@ export const CATEGORY_MAP = {
   "power outlet": "landfill",
   "purse": "landfill",
   "rabbit": "rabbit",
-  "raccoon": "rabbit",
+  "raccoon": "mammal",
   "radio": "landfill",
   "rain": "landfill",
   "rainbow": "landfill",
   "rake": "landfill",
   "remote control": "landfill",
-  "rhinoceros": "rabbit",
+  "rhinoceros": "mammal",
   "rifle": "landfill",
   "river": "landfill",
   "roller coaster": "landfill",
@@ -278,7 +278,7 @@ export const CATEGORY_MAP = {
   "screwdriver": "landfill",
   "sea turtle": "fish",
   "shark": "fish",
-  "sheep": "rabbit",
+  "sheep": "mammal",
   "shoe": "landfill",
   "shorts": "landfill",
   "shovel": "landfill",
@@ -301,7 +301,7 @@ export const CATEGORY_MAP = {
   "spreadsheet": "landfill",
   "square": "landfill",
   "squiggle": "landfill",
-  "squirrel": "rabbit",
+  "squirrel": "mammal",
   "stairs": "landfill",
   "star": "landfill",
   "steak": "landfill",
@@ -310,7 +310,7 @@ export const CATEGORY_MAP = {
   "stitches": "landfill",
   "stop sign": "landfill",
   "stove": "landfill",
-  "strawberry": "landfill",
+  "strawberry": "fruit",
   "streetlight": "landfill",
   "string bean": "landfill",
   "submarine": "landfill",
@@ -323,7 +323,7 @@ export const CATEGORY_MAP = {
   "syringe": "landfill",
   "table": "landfill",
   "teapot": "landfill",
-  "teddy-bear": "landfill",
+  "teddy bear": "mammal",
   "telephone": "landfill",
   "television": "landfill",
   "tennis racquet": "landfill",
@@ -331,7 +331,7 @@ export const CATEGORY_MAP = {
   "the eiffel tower": "landfill",
   "the great wall of china": "landfill",
   "the mona lisa": "landfill",
-  "tiger": "rabbit",
+  "tiger": "mammal",
   "toaster": "landfill",
   "toe": "landfill",
   "toilet": "landfill",
@@ -347,14 +347,14 @@ export const CATEGORY_MAP = {
   "trombone": "landfill",
   "truck": "landfill",
   "trumpet": "landfill",
-  "t-shirt": "landfill",
+  "t shirt": "landfill",
   "umbrella": "landfill",
   "underwear": "landfill",
   "van": "landfill",
   "vase": "landfill",
   "violin": "landfill",
   "washing machine": "landfill",
-  "watermelon": "landfill",
+  "watermelon": "fruit",
   "waterslide": "landfill",
   "whale": "fish",
   "wheel": "landfill",
@@ -363,7 +363,7 @@ export const CATEGORY_MAP = {
   "wine glass": "landfill",
   "wristwatch": "landfill",
   "yoga": "landfill",
-  "zebra": "rabbit",
+  "zebra": "mammal",
   "zigzag": "landfill",
 };
 
@@ -440,4 +440,42 @@ export function resolveCategory(rawLabel, predictions = []) {
 
   rankedMatches.sort((a, b) => b.score - a.score);
   return rankedMatches[0]?.category || directCategory;
+}
+
+// Which raw label actually decided the category. When the top label is
+// junk that maps to landfill, resolveCategory rescues the drawing using a
+// lower-ranked prediction -- and the label that WON is the honest species
+// to show, not the discarded top guess. Returns "" when nothing specific
+// is known, so callers fall back to the category name.
+export function resolveSpecies(rawLabel, predictions = []) {
+  if (mapToCategory(rawLabel) !== "landfill") {
+    return normalizeLabel(rawLabel);
+  }
+
+  const ranked = (predictions || [])
+    .map((prediction) => {
+      const label =
+        prediction?.label || prediction?.name || prediction;
+      const scoreValue = Number(
+        prediction?.score ?? prediction?.confidence ?? 0
+      );
+      const score = Number.isFinite(scoreValue) ? scoreValue : 0;
+
+      return {
+        label,
+        category: mapToCategory(label),
+        score,
+      };
+    })
+    .filter(
+      ({ category }) => category && category !== "landfill"
+    );
+
+  if (ranked.length === 0) {
+    // Genuinely landfill: the top label is the true answer.
+    return normalizeLabel(rawLabel);
+  }
+
+  ranked.sort((a, b) => b.score - a.score);
+  return normalizeLabel(ranked[0].label);
 }

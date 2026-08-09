@@ -2,7 +2,10 @@
 import World from "./world/World";
 import DrawingScreen from "./components/DrawingScreen";
 import { createCreation, getCreations } from "./api/creations";
-import { resolveCategory } from "./utils/classificationMap";
+import {
+  resolveCategory,
+  resolveSpecies,
+} from "./utils/classificationMap";
 import {
   LANDFILL_CENTRE,
   LANDFILL_RADIUS,
@@ -103,7 +106,9 @@ function randomPlacement(classification) {
   const scale =
     randomProfileScale(classification);
 
-  // Fruit hangs from a tree.
+  // Fruit has fallen from the tree: it rests on the ground in the
+  // ring between the trunk and the edge of the canopy, so it reads as
+  // dropped from any camera angle rather than floating beside a branch.
   if (profile.zone === "tree") {
     const anchor =
       TREE_ANCHORS[
@@ -113,26 +118,35 @@ function randomPlacement(classification) {
         )
       ];
 
+    const treeScale = anchor.scale ?? 1;
+
+    // Trunk is r=0.22 at its base; the canopy reaches out to r=0.72.
+    const trunkEdge = 0.22 * treeScale;
+    const dripLine = 0.72 * treeScale;
+
+    const angle = Math.random() * Math.PI * 2;
+
+    // Clear the trunk by the fruit's own radius (half its scale) so it
+    // never clips into the bark, then scatter out to the drip line.
+    const fruitRadius = scale * 0.5;
+
+    const inner = trunkEdge + fruitRadius + 0.06;
+    const outer = Math.max(dripLine, inner + 0.35);
+
+    const distance =
+      inner + Math.random() * (outer - inner);
+
     return {
       position: {
-        x:
-          anchor.x +
-          Math.random() * 0.8 -
-          0.4,
-
-        y:
-          anchor.y +
-          Math.random() * 0.5,
-
-        z:
-          anchor.z +
-          Math.random() * 0.3 -
-          0.15,
+        x: anchor.x + Math.cos(angle) * distance,
+        y: 0,
+        z: anchor.z + Math.sin(angle) * distance,
       },
 
       scale,
     };
   }
+
 
   // Underwater animals go inside the pond.
   if (profile.zone === "pond") {
@@ -315,6 +329,11 @@ export default function App() {
         resolveCategory(type, predictions)
       );
 
+    // The label that actually decided the category -- shown on the card
+    // so a drawing the model knows as "cat" is not just called "Mammal".
+    const species =
+      resolveSpecies(type, predictions);
+
     const placement =
       randomPlacement(
         normalizedClassification
@@ -348,6 +367,7 @@ export default function App() {
         normalizedClassification,
 
       type:
+        species ||
         type ||
         normalizedClassification,
 

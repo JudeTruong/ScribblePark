@@ -1,4 +1,4 @@
-const PROFILES = {
+﻿const PROFILES = {
   flower: {
     behavior: "sway",
     zone: "land",
@@ -28,7 +28,7 @@ const PROFILES = {
   },
 
   fruit: {
-    behavior: "hang",
+    behavior: "fallen",
     zone: "tree",
     minScale: 0.3,
     maxScale: 0.55,
@@ -81,6 +81,13 @@ const PROFILES = {
     zone: "land",
     minScale: 0.5,
     maxScale: 1.2,
+  },
+
+  landfill: {
+    behavior: "static",
+    zone: "landfill",
+    minScale: 0.5,
+    maxScale: 1.1,
   },
 };
 
@@ -179,6 +186,7 @@ const LABEL_GROUPS = {
   ],
 
   wandering: [
+    "mammal",
     "dog",
     "cat",
     "fox",
@@ -213,6 +221,10 @@ const LABEL_GROUPS = {
     "crab",
   ],
 
+  landfill: [
+    "landfill",
+  ],
+
   static: [
     "rock",
     "stone",
@@ -245,15 +257,17 @@ const ALIASES = {
 };
 
 export const TREE_ANCHORS = [
-  { x: -11, y: 2.1, z: -7 },
-  { x: -10, y: 1.8, z: 5 },
-  { x: -6, y: 1.9, z: -11 },
-  { x: 11, y: 2, z: -8 },
-  { x: 12, y: 1.7, z: 6 },
-  { x: 2, y: 1.9, z: -12 },
-  { x: -8, y: 1.9, z: 12 },
-  { x: 0, y: 1.8, z: 14 },
-  { x: 9, y: 2, z: 12 },
+  // Trunk base of each foreground tree, with the tree's scale so
+  // fallen fruit can rest between the trunk and the drip line.
+  { x: -11, y: 0, z: -7, scale: 1.5 },
+  { x: -10, y: 0, z: 5, scale: 1.15 },
+  { x: -6, y: 0, z: -11, scale: 1.25 },
+  { x: 11, y: 0, z: -8, scale: 1.4 },
+  { x: 12, y: 0, z: 6, scale: 1.05 },
+  { x: 2, y: 0, z: -12, scale: 1.2 },
+  { x: -8, y: 0, z: 12, scale: 1.25 },
+  { x: 0, y: 0, z: 14, scale: 1.1 },
+  { x: 9, y: 0, z: 12, scale: 1.3 },
 ];
 
 

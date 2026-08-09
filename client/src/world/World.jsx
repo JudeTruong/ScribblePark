@@ -1,4 +1,4 @@
-import {
+﻿import {
   useCallback,
   useEffect,
   useMemo,
@@ -106,6 +106,18 @@ const CLASS_INFO = {
       "A water bird capable of swimming, walking and flying.",
   },
 
+  mammal: {
+    label: "Mammal",
+    description:
+      "A warm-blooded park visitor that roams the meadow.",
+  },
+
+  fruit: {
+    label: "Fruit",
+    description:
+      "Ripe and hanging from a branch - part of the park's harvest.",
+  },
+
   landfill: {
     label: "Litter",
     description:
@@ -126,6 +138,19 @@ function displayCreationNumber(creation) {
   }
 
   return `#${creation.id}`;
+}
+
+// "teddy bear" -> "Teddy Bear", for the species shown on the card.
+function titleCaseLabel(value) {
+  return value
+    .split(" ")
+    .filter(Boolean)
+    .map(
+      (word) =>
+        word.charAt(0).toUpperCase() +
+        word.slice(1)
+    )
+    .join(" ");
 }
 
 function normalizeClassification(creation) {
@@ -453,13 +478,35 @@ export default function World({
         )
       : "flower";
 
-  const inspectedInfo =
+  const inspectedBaseInfo =
     CLASS_INFO[inspectedClassification] ??
     {
       label: inspectedClassification,
       description:
         "A user-created resident of ScribblePark.",
     };
+
+  // The classifier often knows the species ("cat") even though we map it
+  // to a broader category ("mammal") to decide how it moves. Show the
+  // specific label when we have it, and keep the category's description.
+  const inspectedSpecies =
+    typeof inspectedCreation?.type === "string"
+      ? inspectedCreation.type.trim().toLowerCase()
+      : "";
+
+  const inspectedInfo =
+    inspectedSpecies &&
+    inspectedSpecies !== inspectedClassification
+      ? {
+          label: titleCaseLabel(inspectedSpecies),
+          description: inspectedBaseInfo.description,
+        }
+      : {
+          ...inspectedBaseInfo,
+          label: titleCaseLabel(
+            inspectedBaseInfo.label
+          ),
+        };
 
   return (
     <div

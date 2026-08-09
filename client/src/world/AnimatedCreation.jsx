@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+﻿import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import Flower from "./Flower";
 
@@ -98,6 +98,42 @@ export default function AnimatedCreation({
           1
         );
         object.rotation.z = -Math.cos(time * 2.8) * hop * 0.09;
+
+        break;
+      }
+
+      case "fruit": {
+        // Fallen fruit: sits on the ground, no bob. A very slow rock
+        // only, so it never reads as floating from any angle.
+        object.position.set(
+          origin.x,
+          origin.y,
+          origin.z
+        );
+
+        object.rotation.z =
+          Math.sin(time * 0.8 + origin.x) * 0.05;
+
+        break;
+      }
+
+      case "mammal": {
+        const walk = time * 0.3;
+        const step = Math.abs(Math.sin(time * 2.2));
+
+        object.position.set(
+          origin.x + Math.sin(walk) * 1.8,
+          origin.y + step * 0.06,
+          origin.z + Math.cos(walk * 0.7) * 0.9
+        );
+
+        // Face the direction of travel.
+        object.rotation.z = Math.cos(walk) * 0.05;
+        object.scale.set(
+          1 + step * 0.02,
+          1 - step * 0.03,
+          1
+        );
 
         break;
       }
