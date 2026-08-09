@@ -33,12 +33,12 @@ app.use(express.json());
 function rowToCreation(req, row) {
   return {
     id: row.id,
-    name: row.name,
-    category: row.category,
+    classification: row.classification,
+    creatorName: row.creator_name,
     imageUrl: `${req.protocol}://${req.get("host")}/api/creations/${row.id}/image`,
     position: {
       x: row.position_x,
-      y: 0,
+      y: row.position_y,
       z: row.position_z,
     },
     scale: row.scale,
@@ -54,33 +54,43 @@ app.post("/api/creations", (req, res) => {
       return;
     }
 
-    const { name, category, positionX, positionZ, scale } = req.body;
+    const { classification, creatorName, positionX, positionY, positionZ, scale } = req.body;
 
     if (!req.file) {
       res.status(400).json({ error: "An image file is required" });
       return;
     }
-    if (typeof name !== "string" || name.trim().length < 1 || name.length > 50) {
-      res.status(400).json({ error: "Name must be between 1 and 50 characters" });
+    if (creatorName !== undefined && (typeof creatorName !== "string" || creatorName.length > 50)) {
+      res.status(400).json({ error: "creatorName must be 50 characters or fewer" });
       return;
     }
-    if (category !== "flower") {
-      res.status(400).json({ error: "Category must be 'flower'" });
+    if (classification !== undefined && (typeof classification !== "string" || classification.length > 50)) {
+      res.status(400).json({ error: "classification must be 50 characters or fewer" });
       return;
     }
     const posX = Number(positionX);
+    const posY = positionY === undefined ? 0 : Number(positionY);
     const posZ = Number(positionZ);
     const flowerScale = scale === undefined ? 1 : Number(scale);
-    if (!Number.isFinite(posX) || !Number.isFinite(posZ) || !Number.isFinite(flowerScale)) {
+    if (!Number.isFinite(posX) || !Number.isFinite(posY) || !Number.isFinite(posZ) || !Number.isFinite(flowerScale)) {
       res.status(400).json({ error: "position and scale must be numeric" });
       return;
     }
 
     try {
       const [result] = await pool.query(
-        `INSERT INTO creations (name, category, image, mime_type, position_x, position_z, scale)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [name.trim(), category, req.file.buffer, req.file.mimetype, posX, posZ, flowerScale]
+        `INSERT INTO creations (classification, creator_name, image, mime_type, position_x, position_y, position_z, scale)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          classification || "flower",
+          creatorName ? creatorName.trim() : null,
+          req.file.buffer,
+          req.file.mimetype,
+          posX,
+          posY,
+          posZ,
+          flowerScale,
+        ]
       );
 
       const [rows] = await pool.query("SELECT * FROM creations WHERE id = ?", [result.insertId]);
@@ -95,7 +105,7 @@ app.post("/api/creations", (req, res) => {
 app.get("/api/creations", async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, name, category, position_x, position_z, scale, created_at FROM creations ORDER BY id"
+      "SELECT id, classification, creator_name, position_x, position_y, position_z, scale, created_at FROM creations ORDER BY id"
     );
     res.json(rows.map((row) => rowToCreation(req, row)));
   } catch (error) {
@@ -111,7 +121,7 @@ app.get("/api/creations/:id/image", async (req, res) => {
     ]);
     if (rows.length === 0) {
       res.status(404).json({ error: "Creation not found" });
-      return; //hello
+      return;
     }
     res.set("Content-Type", rows[0].mime_type);
     res.send(rows[0].image);

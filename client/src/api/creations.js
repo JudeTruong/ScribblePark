@@ -8,12 +8,15 @@ export async function getCreations() {
   return response.json();
 }
 
-export async function createCreation({ name, category, imageBlob, position, scale }) {
+export async function createCreation({ classification, creatorName, imageBlob, position, scale }) {
   const formData = new FormData();
-  formData.append("name", name);
-  formData.append("category", category);
+  formData.append("classification", classification);
+  if (creatorName) {
+    formData.append("creatorName", creatorName);
+  }
   formData.append("image", imageBlob, "creation.png");
   formData.append("positionX", position.x);
+  formData.append("positionY", position.y);
   formData.append("positionZ", position.z);
   formData.append("scale", scale);
 
