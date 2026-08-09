@@ -580,14 +580,14 @@ export default function DrawingCanvas({ onComplete }) {
 
       <div style={styles.stageRow}>
         <div style={styles.stageBadge}>
-          {phase === "outline" ? "1. Draw the outline" : "2. Color it in"}
+          {phase === "outline" ? "1. Draw the outline" : "2. Colour it in"}
         </div>
       </div>
 
       <p style={styles.stageHint}>
         {phase === "outline"
           ? "Draw the outline (black only)."
-          : "Add color on top of the outline, around or inside!"}
+          : "Add colour on top of the outline, around, or inside!"}
       </p>
 
       <div style={styles.toolRow}>
@@ -598,7 +598,7 @@ export default function DrawingCanvas({ onComplete }) {
         >
           Pencil
         </button>
-        {phase === "color" && (
+        {phase === "colour" && (
           <button
             type="button"
             onClick={() => setTool("fill")}
