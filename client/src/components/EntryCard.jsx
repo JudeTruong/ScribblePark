@@ -1,20 +1,3 @@
-const TYPE_EMOJI = {
-  flower: "🌸",
-  tree: "🌳",
-  bush: "🌿",
-  mushroom: "🍄",
-  rabbit: "🐇",
-  toad: "🐸",
-  bug: "🐛",
-  snail: "🐌",
-  butterfly: "🦋",
-  bird: "🐦",
-  fish: "🐟",
-  duck: "🦆",
-  fruit: "🍎",
-  landfill: "🗑️",
-};
-
 function ordinal(n) {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
@@ -40,7 +23,6 @@ export default function EntryCard({ creations, lastCreation, onContinue }) {
     : 0;
 
   const totalCount = creations.length;
-  const emoji = TYPE_EMOJI[classification] ?? "✏️";
   const label = classification.charAt(0).toUpperCase() + classification.slice(1);
 
   return (
@@ -57,10 +39,8 @@ export default function EntryCard({ creations, lastCreation, onContinue }) {
           } : {}),
         }}
       >
-        <div style={styles.emoji}>{emoji}</div>
-
         <h2 style={styles.heading}>
-          {hasName ? `"${name}" is in the park!` : `Your ${label} is in the park!`}
+          {hasName ? `${name} the ${label} is in the park!` : `${label} is in the park!`}
         </h2>
 
         <div style={styles.statsGrid}>
@@ -123,11 +103,6 @@ const styles = {
   },
   imageWrap: {
     display: "none",
-  },
-  emoji: {
-    fontSize: "32px",
-    lineHeight: 1,
-    marginTop: "-8px",
   },
   heading: {
     margin: 0,
