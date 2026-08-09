@@ -45,17 +45,18 @@ export default function EntryCard({ creations, lastCreation, onContinue }) {
 
   return (
     <div style={styles.overlay}>
-      <div style={styles.card}>
-        <div style={styles.imageWrap}>
-          {imageUrl && (
-            <img
-              src={imageUrl}
-              alt={`Your ${classification}`}
-              style={styles.image}
-            />
-          )}
-        </div>
-
+      <div
+        style={{
+          ...styles.card,
+          ...(imageUrl ? {
+            backgroundImage: `url(${imageUrl})`,
+            backgroundSize: "120px 120px",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center top",
+            paddingTop: "140px",
+          } : {}),
+        }}
+      >
         <div style={styles.emoji}>{emoji}</div>
 
         <h2 style={styles.heading}>
@@ -121,19 +122,7 @@ const styles = {
     gap: "16px",
   },
   imageWrap: {
-    width: "96px",
-    height: "96px",
-    borderRadius: "14px",
-    overflow: "hidden",
-    border: "2px solid #c8ddb0",
-    background: "#f0f7e4",
-    imageRendering: "pixelated",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    objectFit: "contain",
-    imageRendering: "pixelated",
+    display: "none",
   },
   emoji: {
     fontSize: "32px",
