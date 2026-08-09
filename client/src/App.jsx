@@ -287,9 +287,6 @@ export default function App() {
             ),
         }));
         setCreations(mapped);
-        if (mapped.length > 0) {
-          setStep("world");
-        }
       })
       .catch(console.error)
       .finally(() => {
