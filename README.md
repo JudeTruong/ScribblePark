@@ -1,10 +1,10 @@
-# ScribblePark
+# ScribblePark | Summer Hacks 2026
 
 > Draw something. Plant it. Watch the meadow grow.
 
-ScribblePark is a collaborative living meadow where anyone can doodle a creature or plant, and watch it appear in a shared 3D world — permanently, alongside every other drawing ever made.
+ScribblePark is a collaborative living meadow where anyone can doodle a creature or plant, and watch it appear in a shared 3D world, permanently, alongside every other drawing ever made.
 
-Built for **SummerHacks 2025** competing in the **Main Track** and the **TECHNATION Data Intelligence Track**.
+Built for **SummerHacks 2026** competing in the **Main Track** and the **TECHNATION Data Intelligence Track**.
 
 ---
 
