@@ -55,12 +55,13 @@ export default function DrawingCanvas({ onComplete }) {
   // Initialize canvas as fully transparent on mount
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
     const lineCanvas = document.createElement("canvas");
     lineCanvas.width = CANVAS_SIZE;
     lineCanvas.height = CANVAS_SIZE;
+    lineCanvas.getContext("2d", { willReadFrequently: true });
     lineCanvasRef.current = lineCanvas;
   }, []);
 
@@ -419,7 +420,7 @@ export default function DrawingCanvas({ onComplete }) {
     const alignedCanvas = document.createElement("canvas");
     alignedCanvas.width = CANVAS_SIZE;
     alignedCanvas.height = CANVAS_SIZE;
-    const ctx = alignedCanvas.getContext("2d");
+    const ctx = alignedCanvas.getContext("2d", { willReadFrequently: true });
     const destX = bounds.x;
     const destY = CANVAS_SIZE - bounds.height;
 
@@ -441,7 +442,7 @@ export default function DrawingCanvas({ onComplete }) {
     const classifierCanvas = document.createElement("canvas");
     classifierCanvas.width = CANVAS_SIZE;
     classifierCanvas.height = CANVAS_SIZE;
-    const ctx = classifierCanvas.getContext("2d");
+    const ctx = classifierCanvas.getContext("2d", { willReadFrequently: true });
 
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
