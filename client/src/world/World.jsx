@@ -626,27 +626,23 @@ export default function World({
 }
 
 const buttonStyle = {
-  border: "none",
-  borderRadius: "999px",
-  padding: "12px 20px",
+  border: "2px solid #4d6b3b",
+  borderRadius: "8px",
+  padding: "10px 16px",
   background: "#fffdf4",
   color: "#315638",
-  fontSize: "15px",
+  fontSize: "14px",
   fontWeight: "700",
   cursor: "pointer",
-  boxShadow:
-    "0 6px 20px rgba(42, 74, 45, 0.22)",
 };
 
 const instructionsStyle = {
   padding: "8px 12px",
-  borderRadius: "10px",
-  background:
-    "rgba(255, 253, 244, 0.88)",
+  borderRadius: "8px",
+  background: "#fffdf4",
   color: "#315638",
   fontSize: "13px",
-  boxShadow:
-    "0 4px 14px rgba(42, 74, 45, 0.14)",
+  border: "2px solid #4d6b3b",
 };
 
 const crosshairStyle = {
@@ -671,11 +667,11 @@ const interactionPromptStyle = {
   zIndex: 30,
   transform: "translateX(-50%)",
   padding: "10px 16px",
-  borderRadius: "999px",
-  background:
-    "rgba(39, 61, 42, 0.92)",
+  borderRadius: "8px",
+  background: "#314b35",
   color: "white",
   fontWeight: "700",
+  border: "2px solid #fff",
   pointerEvents: "none",
 };
 
@@ -686,13 +682,11 @@ const informationCardStyle = {
   zIndex: 40,
   width: "290px",
   padding: "20px",
-  border: "3px solid white",
-  borderRadius: "18px",
-  background:
-    "rgba(39, 61, 42, 0.95)",
+  border: "2px solid #fff",
+  borderRadius: "10px",
+  background: "#314b35",
   color: "white",
-  boxShadow:
-    "0 12px 35px rgba(0,0,0,0.3)",
+  boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
   pointerEvents: "none",
 };
 
