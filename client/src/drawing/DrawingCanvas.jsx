@@ -216,6 +216,7 @@ export default function DrawingCanvas({ onComplete }) {
   );
 
   const handlePointerDown = (clientX, clientY) => {
+    if (isSubmittingRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const point = getCanvasPoint(clientX, clientY);
@@ -245,7 +246,7 @@ export default function DrawingCanvas({ onComplete }) {
   };
 
   const handlePointerMove = (clientX, clientY) => {
-    if (!isDrawingRef.current) return;
+    if (!isDrawingRef.current || isSubmittingRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const point = getCanvasPoint(clientX, clientY);
@@ -340,7 +341,7 @@ export default function DrawingCanvas({ onComplete }) {
         const formData = new FormData();
         formData.append("file", blob, "drawing-white.png");
 
-        const response = await fetch("http://localhost:8000/api/classify", {
+        const response = await fetch(`${CLASSIFIER_URL}/api/classify`, {
           method: "POST",
           body: formData,
         });
@@ -513,7 +514,6 @@ export default function DrawingCanvas({ onComplete }) {
     setError("");
 
     const canvas = canvasRef.current;
-    const lineCanvas = lineCanvasRef.current;
     const alignedCanvas = getAlignedCanvas(canvas);
 
     const originalBlob = await new Promise((resolve, reject) => {
@@ -537,57 +537,9 @@ export default function DrawingCanvas({ onComplete }) {
 
     const previewUrl = URL.createObjectURL(originalBlob);
 
-    const alignedLineCanvas = getAlignedCanvas(lineCanvas || canvas);
-    const classifierCanvas = getLineArtCanvas(alignedLineCanvas);
-
-    const classifierBlob = await new Promise((resolve, reject) => {
-      classifierCanvas.toBlob((blob) => {
-        if (!blob) {
-          reject(new Error("Couldn't export classifier image."));
-          return;
-        }
-        resolve(blob);
-      }, "image/png");
-    }).catch((err) => {
-      setError(err.message);
-      return null;
-    });
-
-    if (!classifierBlob) {
-      isSubmittingRef.current = false;
-      setIsSubmitting(false);
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", classifierBlob, "drawing-white.png");
-
-    let type = classificationResult?.type ?? null;
-    let confidence = classificationResult?.confidence ?? null;
-    let predictions = classificationResult?.predictions ?? [];
-
-    try {
-      const response = await fetch(`${CLASSIFIER_URL}/api/classify`, {
-        method: "POST",
-        body: formData,
-      });
-
-        if (!response.ok) {
-          throw new Error("Classifier rejected the request.");
-        }
-
-        const result = await response.json();
-
-        predictions = result?.predictions ?? [];
-        type = result?.type ?? predictions?.[0]?.label ?? null;
-        confidence = result?.confidence ?? predictions?.[0]?.score ?? null;
-      } catch (fetchError) {
-        console.warn("[DrawingCanvas] Classification request failed:", fetchError);
-        setError("Could not classify drawing. Please try again.");
-        setIsSubmitting(false);
-        isSubmittingRef.current = false;
-        return;
-      }
+    const type = classificationResult?.type ?? null;
+    const confidence = classificationResult?.confidence ?? null;
+    const predictions = classificationResult?.predictions ?? [];
 
     setLoadingProgress(100);
     onComplete({
@@ -700,10 +652,10 @@ export default function DrawingCanvas({ onComplete }) {
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!hasDrawn || !hasColoring || isSubmitting}
-            style={{ ...styles.plantButton, ...((!hasDrawn || !hasColoring || isSubmitting) ? styles.plantButtonDisabled : {}) }}
+            disabled={!hasDrawn || !hasColoring || isSubmitting || classificationState === "classifying"}
+            style={{ ...styles.plantButton, ...((!hasDrawn || !hasColoring || isSubmitting || classificationState === "classifying") ? styles.plantButtonDisabled : {}) }}
           >
-            {isSubmitting ? "Planting..." : "Plant in World"}
+            {isSubmitting ? "Planting..." : classificationState === "classifying" ? "Identifying..." : "Plant in World"}
           </button>
         </div>
       ) : (

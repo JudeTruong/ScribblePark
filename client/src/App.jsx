@@ -541,7 +541,7 @@ export default function App() {
         }}
       >
         <div style={floatingCardStyle}>
-          <h2 style={{ margin: "0 0 6px", fontSize: "18px" }}>Your park is growing</h2>
+          <h2 style={{ margin: "0 0 6px", fontSize: "18px" }}>The park is growing</h2>
 
           <p style={{ margin: "0 0 12px", lineHeight: 1.5 }}>
             {summary}
