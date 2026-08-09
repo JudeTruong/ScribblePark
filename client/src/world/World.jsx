@@ -107,6 +107,13 @@ const CLASS_INFO = {
   },
 };
 
+function displayCreationName(value, fallback) {
+  const name = value?.trim();
+  return name && name !== "Unnamed Creation"
+    ? name
+    : fallback;
+}
+
 function normalizeClassification(creation) {
   return (
     creation?.classification ||
@@ -585,8 +592,11 @@ export default function World({
               margin: "4px 0 8px",
             }}
           >
-            {inspectedCreation.name ||
-              inspectedInfo.label}
+            {displayCreationName(
+              inspectedCreation.name ||
+                inspectedCreation.creatorName,
+              "Unnamed"
+            )}
           </h2>
 
           <p

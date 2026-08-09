@@ -27,6 +27,7 @@ export default function DrawingCanvas({ onComplete }) {
 
   const [tool, setTool] = useState("pencil"); // "pencil" | "eraser" | "fill"
   const [color, setColor] = useState(COLOR_PRESETS[0]);
+  const [creatorName, setCreatorName] = useState("");
   const [hasDrawn, setHasDrawn] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -517,6 +518,7 @@ export default function DrawingCanvas({ onComplete }) {
     onComplete({
       imageBlob: originalBlob,
       previewUrl,
+      creatorName: creatorName.trim(),
       type,
       confidence,
       predictions,
@@ -607,14 +609,25 @@ export default function DrawingCanvas({ onComplete }) {
 
       {error && <p style={styles.error}>{error}</p>}
 
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={!hasDrawn || isSubmitting}
-        style={{ ...styles.plantButton, ...((!hasDrawn || isSubmitting) ? styles.plantButtonDisabled : {}) }}
-      >
-        {isSubmitting ? "Planting..." : "Plant in World"}
-      </button>
+      <div style={styles.plantRow}>
+        <input
+          type="text"
+          value={creatorName}
+          onChange={(event) => setCreatorName(event.target.value)}
+          maxLength={50}
+          placeholder="Name it (optional)"
+          style={styles.nameInput}
+        />
+
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={!hasDrawn || isSubmitting}
+          style={{ ...styles.plantButton, ...((!hasDrawn || isSubmitting) ? styles.plantButtonDisabled : {}) }}
+        >
+          {isSubmitting ? "Planting..." : "Plant in World"}
+        </button>
+      </div>
 
       {isSubmitting && (
         <div style={styles.loadingBarBackground}>
@@ -713,17 +726,23 @@ const styles = {
     cursor: "pointer",
   },
   label: { fontSize: "14px", color: "#555", marginRight: "4px" },
-  nameRow: {
+  plantRow: {
     display: "flex",
-    flexDirection: "column",
-    gap: "4px",
+    gap: "10px",
     width: `${DISPLAY_SIZE}px`,
+    maxWidth: "100%",
+    justifyContent: "center",
+    alignItems: "stretch",
+    flexWrap: "wrap",
   },
   nameInput: {
+    flex: "1 1 170px",
+    minWidth: 0,
     padding: "10px 12px",
     borderRadius: "8px",
     border: "1px solid #ccc",
     fontSize: "14px",
+    fontFamily: "'Fredoka', system-ui, sans-serif",
   },
   error: { color: "#e63946", fontSize: "13px", margin: 0 },
   plantButton: {
@@ -736,6 +755,7 @@ const styles = {
     fontWeight: 600,
     fontFamily: "'Fredoka', system-ui, sans-serif",
     cursor: "pointer",
+    flex: "0 0 auto",
   },
   plantButtonDisabled: {
     background: "#a5d6a7",

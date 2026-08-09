@@ -286,7 +286,7 @@ export default function AnimatedCreation({
       <Flower
         id={creation.id}
         imageUrl={creation.imageUrl}
-        name={creation.name}
+        name={creation.name || creation.creatorName}
         classification={classification}
         position={{ x: 0, y: 0, z: 0 }}
         scale={finalScale}
