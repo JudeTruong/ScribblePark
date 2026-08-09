@@ -33,5 +33,12 @@ mono_crash.*.json
 /server/.venv
 /server/node_modules
 *.env
+<<<<<<< Updated upstream
 /server/__pycache__
 server/__pycache__/classify.cpython-313.pyc
+=======
+venv/
+venv312/
+__pycache__/
+*.py[cod]
+>>>>>>> Stashed changes
