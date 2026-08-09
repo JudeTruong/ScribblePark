@@ -1,18 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import AnimatedCreation from "./AnimatedCreation";
 import {
   OrbitControls,
   PointerLockControls,
 } from "@react-three/drei";
+import {
+  EffectComposer,
+  Pixelation,
+} from "@react-three/postprocessing";
 import * as THREE from "three";
 
 import Environment from "./Environment";
-import Flower from "./Flower";
 
-const WIDE_POSITION = [0, 9, 20];
-const FIRST_PERSON_POSITION = [0, 1.4, 10];
+
+const WIDE_POSITION = [0, 11, 24];
+const FIRST_PERSON_POSITION = [0, 1.4, 12];
+const WORLD_BOUNDARY = 20;
 const GROUND_HEIGHT = 1.4;
-const WORLD_BOUNDARY = 14;
 
 function FirstPersonController({ active }) {
   const { camera } = useThree();
@@ -82,7 +87,7 @@ function FirstPersonController({ active }) {
 
     camera.getWorldDirection(forward);
 
-    // Ignore camera tilt when calculating movement.
+    // Ignore vertical camera tilt while moving.
     forward.y = 0;
     forward.normalize();
 
@@ -117,20 +122,19 @@ function FirstPersonController({ active }) {
       camera.position.z += movement.z;
     }
 
-    // Apply gravity.
+    // Gravity and jumping.
     verticalVelocity.current -= gravity * safeDelta;
 
     verticalPosition.current +=
       verticalVelocity.current * safeDelta;
 
-    // Stop at the ground.
     if (verticalPosition.current <= GROUND_HEIGHT) {
       verticalPosition.current = GROUND_HEIGHT;
       verticalVelocity.current = 0;
       grounded.current = true;
     }
 
-    // Slight up-and-down movement while walking.
+    // Subtle camera bob while walking.
     let headBob = 0;
 
     if (isWalking && grounded.current) {
@@ -143,7 +147,7 @@ function FirstPersonController({ active }) {
     camera.position.y =
       verticalPosition.current + headBob;
 
-    // Keep the player inside the meadow.
+    // Keep the player inside the world.
     const distanceFromCentre = Math.hypot(
       camera.position.x,
       camera.position.z
@@ -252,8 +256,6 @@ export default function World({ creations = [] }) {
         dpr={[1, 1.5]}
         onCreated={({ gl }) => {
           canvasElement.current = gl.domElement;
-          gl.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1));
-          gl.domElement.style.imageRendering = "pixelated";
         }}
         gl={{
           antialias: true,
@@ -267,42 +269,42 @@ export default function World({ creations = [] }) {
           far: 150,
         }}
       >
+        {/* Complete environment */}
         <Environment />
 
-        {/* User-created billboard flowers */}
+        {/* User-created PNG flowers */}
         {creations.map((creation) => (
-          <Flower
+        <AnimatedCreation
             key={creation.id}
-            imageUrl={creation.imageUrl}
-            name={creation.name}
-            position={creation.position}
-            scale={creation.scale}
-          />
+            creation={creation}
+        />
         ))}
 
         <CameraReset mode={mode} />
 
         <FirstPersonController active={firstPerson} />
 
-        {/* Unlimited first-person mouse movement */}
         <PointerLockControls
           enabled={firstPerson}
           onUnlock={returnToWideView}
         />
 
-        {/* Wide-view camera controls */}
         <OrbitControls
           enabled={!firstPerson}
           target={[0, 1, 0]}
           enablePan={false}
           enableDamping
           dampingFactor={0.06}
-          minDistance={10}
-          maxDistance={28}
+          minDistance={12}
+          maxDistance={35}
           minPolarAngle={Math.PI / 4.5}
           maxPolarAngle={Math.PI / 2.15}
         />
 
+        {/* Pixelates the entire 3D scene */}
+        <EffectComposer multisampling={0}>
+          <Pixelation granularity={1} />
+        </EffectComposer>
       </Canvas>
     </div>
   );

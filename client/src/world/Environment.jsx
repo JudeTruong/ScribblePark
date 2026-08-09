@@ -57,6 +57,7 @@ function Rock({ position, scale = 1, color = "#aaa9a4" }) {
       receiveShadow
     >
       <dodecahedronGeometry args={[0.5, 0]} />
+
       <meshStandardMaterial
         color={color}
         roughness={1}
@@ -78,12 +79,13 @@ function Cloud({ position, scale = 1 }) {
     <group position={position} scale={scale}>
       {cloudParts.map(([x, y, z, size], index) => (
         <mesh key={index} position={[x, y, z]}>
-          <sphereGeometry args={[size, 16, 12]} />
+          <sphereGeometry args={[size, 12, 8]} />
+
           <meshStandardMaterial
-            color="#fffdf7"
+            color="#fff1dd"
             roughness={1}
-            emissive="#fff8e8"
-            emissiveIntensity={0.1}
+            emissive="#ffdab8"
+            emissiveIntensity={0.08}
           />
         </mesh>
       ))}
@@ -171,6 +173,7 @@ function Pond() {
         scale={[1.35, 1, 1]}
       >
         <circleGeometry args={[3.1, 64]} />
+
         <meshPhysicalMaterial
           color="#65b9c2"
           transparent
@@ -189,6 +192,7 @@ function Pond() {
         scale={[1.4, 1, 0.8]}
       >
         <circleGeometry args={[1.8, 48]} />
+
         <meshBasicMaterial
           color="#a4e2df"
           transparent
@@ -221,6 +225,7 @@ function Pond() {
           receiveShadow
         >
           <dodecahedronGeometry args={[0.6, 0]} />
+
           <meshStandardMaterial
             color={index % 2 ? "#9a9b8f" : "#aaa897"}
             roughness={1}
@@ -247,88 +252,250 @@ function Pond() {
   );
 }
 
+function DistantTree({ position, scale }) {
+  return (
+    <group position={position} scale={scale}>
+      <mesh position={[0, 0.6, 0]}>
+        <cylinderGeometry args={[0.09, 0.14, 1.2, 6]} />
+        <meshStandardMaterial color="#72513d" />
+      </mesh>
+
+      <mesh position={[0, 1.55, 0]}>
+        <coneGeometry args={[0.65, 1.8, 7]} />
+
+        <meshStandardMaterial
+          color="#456f4b"
+          roughness={1}
+          flatShading
+        />
+      </mesh>
+
+      <mesh position={[0, 2.15, 0]}>
+        <coneGeometry args={[0.48, 1.4, 7]} />
+
+        <meshStandardMaterial
+          color="#557f50"
+          roughness={1}
+          flatShading
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function SettingSun() {
+  return (
+    <mesh position={[-18, 7, -28]}>
+      <sphereGeometry args={[2.3, 32, 24]} />
+
+      <meshBasicMaterial
+        color="#ffd078"
+        toneMapped={false}
+      />
+    </mesh>
+  );
+}
+
+/*
+ * Trees form a complete ring around the meadow.
+ * The radius varies slightly so the line does not look artificial.
+ */
+const DISTANT_TREES = Array.from({ length: 90 }, (_, index) => {
+  const angle = (index / 90) * Math.PI * 2;
+  const radius = 22 + (index % 5) * 0.7;
+
+  return {
+    position: [
+      Math.cos(angle) * radius,
+      0,
+      Math.sin(angle) * radius,
+    ],
+    scale: 0.75 + (index % 4) * 0.12,
+  };
+});
+
+/*
+ * Hills form a larger ring behind the distant trees.
+ */
+const HORIZON_HILLS = Array.from({ length: 16 }, (_, index) => {
+  const angle = (index / 16) * Math.PI * 2;
+  const radius = 31 + (index % 3) * 2;
+
+  const colours = [
+    "#82945e",
+    "#687f54",
+    "#718454",
+    "#929b61",
+  ];
+
+  return {
+    position: [
+      Math.cos(angle) * radius,
+      -4 - (index % 2) * 0.7,
+      Math.sin(angle) * radius,
+    ],
+    rotation: [0, angle + Math.PI / 2, 0],
+    scale: [
+      10 + (index % 4) * 1.5,
+      5 + (index % 3) * 0.8,
+      7 + (index % 2),
+    ],
+    color: colours[index % colours.length],
+  };
+});
+
+/*
+ * Clouds form a ring above the entire environment.
+ */
+const SURROUNDING_CLOUDS = Array.from(
+  { length: 12 },
+  (_, index) => {
+    const angle = (index / 12) * Math.PI * 2;
+    const radius = 25 + (index % 3) * 4;
+
+    return {
+      position: [
+        Math.cos(angle) * radius,
+        9 + (index % 4) * 1.5,
+        Math.sin(angle) * radius,
+      ],
+      scale: 1.1 + (index % 3) * 0.3,
+    };
+  }
+);
+
 export default function Environment() {
   return (
     <>
-      <color attach="background" args={["#bfe5f5"]} />
-      <fog attach="fog" args={["#cceaf4", 28, 55]} />
+      {/* Golden-hour atmosphere */}
+      <color attach="background" args={["#efad7d"]} />
+      <fog attach="fog" args={["#eab586", 28, 70]} />
 
       <Sky
         distance={450000}
-        sunPosition={[5, 8, 4]}
-        inclination={0.55}
-        azimuth={0.18}
+        sunPosition={[-20, 4, -25]}
+        turbidity={10}
+        rayleigh={2}
+        mieCoefficient={0.008}
+        mieDirectionalG={0.85}
       />
 
-      <hemisphereLight args={["#dff5ff", "#789557", 1.8]} />
+      <SettingSun />
+
+      {/* Lighting */}
+      <hemisphereLight
+        args={["#ffd9b0", "#65784d", 1.3]}
+      />
 
       <directionalLight
-        position={[-8, 14, 8]}
-        intensity={2.8}
-        color="#fff1d2"
+        position={[-16, 9, -12]}
+        intensity={3.5}
+        color="#ffb65c"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-near={0.5}
-        shadow-camera-far={45}
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={20}
-        shadow-camera-bottom={-20}
+        shadow-camera-far={70}
+        shadow-camera-left={-30}
+        shadow-camera-right={30}
+        shadow-camera-top={30}
+        shadow-camera-bottom={-30}
         shadow-bias={-0.0002}
       />
 
-      {/* Large meadow */}
+      <ambientLight intensity={0.45} color="#ffd5b0" />
+
+      {/* Large outer meadow */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[16, 128]} />
-        <meshStandardMaterial color="#82bd69" roughness={1} />
+        <circleGeometry args={[30, 128]} />
+
+        <meshStandardMaterial
+          color="#769d57"
+          roughness={1}
+        />
       </mesh>
 
-      {/* Inner grass */}
+      {/* Lighter inner meadow */}
       <mesh
         position={[0, 0.006, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
-        <circleGeometry args={[13.5, 96]} />
-        <meshStandardMaterial color="#91c978" roughness={1} />
+        <circleGeometry args={[20, 128]} />
+
+        <meshStandardMaterial
+          color="#91b968"
+          roughness={1}
+        />
       </mesh>
 
-      {/* Distant hills */}
-      <mesh position={[-12, -2.5, -13]} scale={[10, 4, 6]}>
-        <sphereGeometry args={[1, 24, 16]} />
-        <meshStandardMaterial color="#9ccb80" roughness={1} />
-      </mesh>
+      {/* Complete hill ring */}
+      <group>
+        {HORIZON_HILLS.map((hill, index) => (
+          <mesh
+            key={index}
+            position={hill.position}
+            rotation={hill.rotation}
+            scale={hill.scale}
+            receiveShadow
+          >
+            <sphereGeometry args={[1, 24, 16]} />
 
-      <mesh position={[11, -2.7, -15]} scale={[11, 4.5, 7]}>
-        <sphereGeometry args={[1, 24, 16]} />
-        <meshStandardMaterial color="#77ad68" roughness={1} />
-      </mesh>
+            <meshStandardMaterial
+              color={hill.color}
+              roughness={1}
+              flatShading
+            />
+          </mesh>
+        ))}
+      </group>
 
-      <mesh position={[0, -3, -19]} scale={[14, 5, 8]}>
-        <sphereGeometry args={[1, 24, 16]} />
-        <meshStandardMaterial color="#a7d28b" roughness={1} />
-      </mesh>
+      {/* Complete distant forest ring */}
+      <group>
+        {DISTANT_TREES.map((tree, index) => (
+          <DistantTree
+            key={index}
+            position={tree.position}
+            scale={tree.scale}
+          />
+        ))}
+      </group>
 
+      {/* Pond */}
       <Pond />
 
-      {/* Trees around the perimeter */}
+      {/* Larger foreground trees */}
       <Tree position={[-11, 0, -7]} scale={1.5} />
-      <Tree position={[-10, 0, 5]} scale={1.15} color="#619a59" />
+      <Tree
+        position={[-10, 0, 5]}
+        scale={1.15}
+        color="#619a59"
+      />
       <Tree position={[-6, 0, -11]} scale={1.25} />
       <Tree position={[11, 0, -8]} scale={1.4} />
-      <Tree position={[12, 0, 6]} scale={1.05} color="#8abe6c" />
+      <Tree
+        position={[12, 0, 6]}
+        scale={1.05}
+        color="#8abe6c"
+      />
       <Tree position={[2, 0, -12]} scale={1.2} />
 
-      {/* Bushes */}
+      {/* Additional trees behind the starting camera */}
+      <Tree position={[-8, 0, 12]} scale={1.25} />
+      <Tree position={[0, 0, 14]} scale={1.1} />
+      <Tree position={[9, 0, 12]} scale={1.3} />
+
+      {/* Bushes around the meadow */}
       <Bush position={[-8, 0, -6]} scale={1.1} />
       <Bush position={[-10, 0, 1]} scale={0.9} />
       <Bush position={[10, 0, -7]} scale={1} />
       <Bush position={[11, 0, 8]} scale={0.85} />
       <Bush position={[-5, 0, 10]} scale={0.8} />
       <Bush position={[4, 0, -10]} scale={0.9} />
+      <Bush position={[5, 0, 12]} scale={0.85} />
+      <Bush position={[-11, 0, 8]} scale={0.9} />
 
-      {/* Scattered rocks */}
+      {/* Rocks */}
       <Rock position={[-7, 0.35, 5]} scale={1} />
       <Rock position={[-4, 0.25, -7]} scale={0.7} />
       <Rock position={[10, 0.3, 8]} scale={0.85} />
@@ -339,7 +506,7 @@ export default function Environment() {
         color="#979b98"
       />
 
-      {/* Decorative edge flowers */}
+      {/* Decorative flowers */}
       <TinyFlower position={[-7, 0, 2]} color="#f8b9ce" />
       <TinyFlower position={[-5, 0, 7]} color="#fff1a8" />
       <TinyFlower position={[-2, 0, -8]} color="#c8b7f4" />
@@ -347,19 +514,25 @@ export default function Environment() {
       <TinyFlower position={[11, 0, 3]} color="#f8e193" />
       <TinyFlower position={[2, 0, 9]} color="#c8b7f4" />
 
-      {/* Clouds */}
-      <Cloud position={[-11, 10, -24]} scale={1.8} />
-      <Cloud position={[10, 9, -27]} scale={1.5} />
-      <Cloud position={[0, 12, -32]} scale={1.2} />
+      {/* Complete cloud ring */}
+      <group>
+        {SURROUNDING_CLOUDS.map((cloud, index) => (
+          <Cloud
+            key={index}
+            position={cloud.position}
+            scale={cloud.scale}
+          />
+        ))}
+      </group>
 
       <ContactShadows
         position={[0, 0.02, 0]}
-        opacity={0.25}
-        scale={32}
+        opacity={0.32}
+        scale={45}
         blur={2.5}
-        far={12}
+        far={18}
         resolution={512}
-        color="#47653e"
+        color="#473d2e"
       />
     </>
   );
