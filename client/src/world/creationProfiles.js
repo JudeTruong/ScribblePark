@@ -152,6 +152,7 @@ const LABEL_GROUPS = {
     "parrot",
     "pigeon",
     "crow",
+    "mosquito",
     "hummingbird",
   ],
 
