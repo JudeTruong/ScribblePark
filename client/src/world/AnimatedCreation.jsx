@@ -23,19 +23,34 @@ function normalizeClassification(creation) {
 
   const aliases = {
     flowers: "flower",
+    plant: "flower",
+    plants: "flower",
+
     bunny: "rabbit",
     frog: "toad",
+
     insect: "bug",
-    butterflies: "butterfly",
+    ant: "bug",
+    beetle: "bug",
+    spider: "bug",
+
+    bee: "butterfly",
+    moth: "butterfly",
+
+    fishes: "fish",
   };
 
   return aliases[value] || value;
 }
 
-export default function AnimatedCreation({ creation }) {
+export default function AnimatedCreation({
+  creation,
+  highlighted = false,
+}) {
   const group = useRef();
 
-  const classification = normalizeClassification(creation);
+  const classification =
+    normalizeClassification(creation);
 
   const phase = useMemo(
     () => createPhase(creation.id),
@@ -61,6 +76,9 @@ export default function AnimatedCreation({ creation }) {
     const time = clock.elapsedTime + phase;
     const object = group.current;
 
+    // Reset scale before applying an animation.
+    object.scale.set(1, 1, 1);
+
     switch (classification) {
       case "rabbit": {
         const hop = Math.max(
@@ -81,8 +99,10 @@ export default function AnimatedCreation({ creation }) {
       }
 
       case "toad": {
-        const hopCycle = Math.sin(time * 1.5);
-        const hop = Math.max(0, hopCycle);
+        const hop = Math.max(
+          0,
+          Math.sin(time * 1.5)
+        );
 
         object.position.set(
           origin.x + Math.sin(time * 0.3) * 0.8,
@@ -91,6 +111,8 @@ export default function AnimatedCreation({ creation }) {
         );
 
         object.scale.y = 1 - hop * 0.08;
+        object.rotation.z = 0;
+
         break;
       }
 
@@ -103,6 +125,18 @@ export default function AnimatedCreation({ creation }) {
 
         object.rotation.z =
           Math.sin(time * 5) * 0.025;
+
+        break;
+      }
+
+      case "snail": {
+        object.position.set(
+          origin.x + Math.sin(time * 0.2) * 0.7,
+          origin.y,
+          origin.z + Math.sin(time * 0.1) * 0.2
+        );
+
+        object.rotation.z = 0;
 
         break;
       }
@@ -120,6 +154,19 @@ export default function AnimatedCreation({ creation }) {
         break;
       }
 
+      case "bird": {
+        object.position.set(
+          origin.x + Math.cos(time * 0.45) * 4,
+          origin.y + 4 + Math.sin(time) * 0.35,
+          origin.z + Math.sin(time * 0.45) * 4
+        );
+
+        object.rotation.z =
+          Math.sin(time * 0.9) * 0.08;
+
+        break;
+      }
+
       case "fish": {
         object.position.set(
           origin.x + Math.cos(time * 0.7) * 1.5,
@@ -133,6 +180,34 @@ export default function AnimatedCreation({ creation }) {
         break;
       }
 
+      case "duck": {
+        object.position.set(
+          origin.x + Math.cos(time * 0.25) * 1.2,
+          origin.y + 0.18 + Math.sin(time * 1.5) * 0.025,
+          origin.z + Math.sin(time * 0.25) * 0.7
+        );
+
+        object.rotation.z =
+          Math.sin(time * 1.5) * 0.015;
+
+        break;
+      }
+
+      case "mushroom": {
+        object.position.set(
+          origin.x,
+          origin.y + Math.abs(Math.sin(time * 1.2)) * 0.05,
+          origin.z
+        );
+
+        object.rotation.z =
+          Math.sin(time * 1.2) * 0.02;
+
+        break;
+      }
+
+      case "tree":
+      case "bush":
       case "flower":
       default: {
         object.position.set(
@@ -149,26 +224,19 @@ export default function AnimatedCreation({ creation }) {
     }
   });
 
-  const classScale = {
-    flower: 1,
-    rabbit: 0.85,
-    toad: 0.65,
-    bug: 0.35,
-    butterfly: 0.55,
-    fish: 0.65,
-  };
-
-  const finalScale =
-    (creation.scale ?? 1) *
-    (classScale[classification] ?? 1);
+  // App.jsx already generates classification-based scale.
+  const finalScale = creation.scale ?? 1;
 
   return (
     <group ref={group}>
       <Flower
+        id={creation.id}
         imageUrl={creation.imageUrl}
         name={creation.name}
+        classification={classification}
         position={{ x: 0, y: 0, z: 0 }}
         scale={finalScale}
+        highlighted={highlighted}
       />
     </group>
   );
