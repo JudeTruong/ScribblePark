@@ -3,6 +3,7 @@ import World from "./world/World";
 import DrawingCanvas from "./drawing/DrawingCanvas";
 import DrawingScreen from "./components/DrawingScreen";
 import { createCreation, getCreations } from "./api/creations";
+import { resolveCategory } from "./utils/classificationMap";
 
 const CLASS_SETTINGS = {
   flower: {
@@ -75,6 +76,12 @@ const CLASS_SETTINGS = {
     minScale: 0.7,
     maxScale: 1,
     zone: "pond",
+  },
+
+  landfill: {
+    minScale: 0.5,
+    maxScale: 0.8,
+    zone: "land",
   },
 };
 
@@ -227,9 +234,12 @@ export default function App() {
     confidence,
     predictions = [],
   }) {
+    // Raw model label (e.g. "whale") -> park category (e.g. "fish"),
+    // using top-k predictions as a fallback when the top label maps to
+    // landfill. Then normalizeClassification applies local aliases.
     const normalizedClassification =
       normalizeClassification(
-        type
+        resolveCategory(type, predictions)
       );
 
     const placement = randomPlacement(
