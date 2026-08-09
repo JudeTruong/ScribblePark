@@ -588,7 +588,6 @@ export default function DrawingCanvas({ onComplete }) {
         isSubmittingRef.current = false;
         return;
       }
-    }
 
     setLoadingProgress(100);
     onComplete({
