@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import World from "./world/World";
 import DrawingScreen from "./components/DrawingScreen";
+import EntryCard from "./components/EntryCard";
 import { createCreation, getCreations } from "./api/creations";
 import { resolveCategory } from "./utils/classificationMap";
 import {
@@ -254,6 +255,8 @@ export default function App() {
   const [step, setStep] =
     useState("landing");
 
+  const [lastCreation, setLastCreation] = useState(null);
+
   const [
     creations,
     setCreations,
@@ -368,7 +371,12 @@ export default function App() {
       temporaryCreation,
     ]);
 
-    setStep("world");
+    setLastCreation({
+      classification: normalizedClassification,
+      name: displayName,
+      imageUrl: previewUrl,
+    });
+    setStep("entry");
 
     // Save in the background.
     createCreation({
@@ -500,7 +508,7 @@ export default function App() {
     loadingCreations,
   ]);
 
-  if (step === "world") {
+  if (step === "world" || step === "entry") {
     return (
       <div
         style={{
@@ -529,6 +537,14 @@ export default function App() {
         <World
           creations={creations}
         />
+
+        {step === "entry" && lastCreation && (
+          <EntryCard
+            creations={creations}
+            lastCreation={lastCreation}
+            onContinue={() => setStep("world")}
+          />
+        )}
       </div>
     );
   }
