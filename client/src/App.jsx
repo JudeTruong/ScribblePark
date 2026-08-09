@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import World from "./world/World";
 import DrawingCanvas from "./drawing/DrawingCanvas";
+import DrawingScreen from "./components/DrawingScreen";
 import { createCreation, getCreations } from "./api/creations";
 
 const CLASS_SETTINGS = {
@@ -203,12 +204,13 @@ export default function App() {
   function handleAddDrawing({
     previewUrl,
     imageBlob,
-    name = "Unnamed Creation",
-    category,
+    type,
+    confidence,
+    predictions = [],
   }) {
     const normalizedClassification =
       normalizeClassification(
-        category
+        type
       );
 
     const placement = randomPlacement(
@@ -219,7 +221,7 @@ export default function App() {
 
     const temporaryCreation = {
       id: temporaryId,
-      name,
+      name: "Unnamed Creation",
       description:
         `Hand-drawn ${type || normalizedClassification}`,
       classification:
@@ -244,7 +246,6 @@ export default function App() {
 
     createCreation({
       classification: normalizedClassification,
-      creatorName: name === "Unnamed Creation" ? undefined : name,
       imageBlob,
       position: placement.position,
       scale: placement.scale,
@@ -255,9 +256,12 @@ export default function App() {
             creation.id === temporaryId
               ? {
                   ...savedCreation,
-                  name,
+                  name: "Unnamed Creation",
                   description: `Hand-drawn ${normalizedClassification}`,
                   category: normalizedClassification,
+                  type,
+                  confidence,
+                  predictions,
                 }
               : creation
           )
