@@ -10,10 +10,10 @@ Built for **SummerHacks 2026** competing in the **Main Track** and the **TECHNAT
 
 ## What It Does
 
-1. **Draw** — Sketch an outline on a 64×64 canvas, then color it in on a second pass.
-2. **Transform** — A fine-tuned BEiT sketch classifier identifies what you drew (flower, rabbit, fish, butterfly, etc.) and places it in the right part of the meadow automatically.
-3. **Plant** — Your creation appears live in a shared Three.js world that anyone on the internet can visit.
-4. **Discover** — An entry card shows you real stats: which number flower/rabbit/duck you are, how many others share your name, and how many total creations live in the park.
+1. **Draw**: Sketch an outline on a 64×64 canvas, then color it in on a second pass.
+2. **Transform**: A fine-tuned BEiT sketch classifier identifies what you drew (flower, rabbit, fish, butterfly, etc.) and places it in the right part of the meadow automatically.
+3. **Plant**: Your creation appears live in a shared Three.js world that anyone on the internet can visit.
+4. **Discover**: An entry card shows you real stats: which number flower/rabbit/duck you are, how many others share your name, and how many total creations live in the park.
 
 The meadow gets richer with every visitor. Land animals roam the grass, fish swim beneath the pond, birds float in the air, and litter collects in the designated dump corner.
 
@@ -34,8 +34,8 @@ The meadow gets richer with every visitor. Land animals roam the grass, fish swi
 
 ScribblePark collects real, live usage data and surfaces it directly to users:
 
-- **Entry card** — shown immediately after planting, displaying: which number of that type you are, how many others share your creation's name, and total park population. All computed from the live database, never hardcoded.
-- **Park composition** — the world itself is a live visualization. The ratio of flowers to trees to fish reflects exactly who has visited and what they drew.
+- **Entry card**: shown immediately after planting, displaying: which number of that type you are, how many others share your creation's name, and total park population. All computed from the live database, never hardcoded.
+- **Park composition**: the world itself is a live visualization. The ratio of flowers to trees to fish reflects exactly who has visited and what they drew.
 - Data updates in real time; every new submission changes the stats the next person sees.
 
 ---
@@ -83,9 +83,9 @@ python app.py
 
 ## How It Fits the Judging Criteria
 
-**One moment of input** — Drawing takes under 60 seconds. No account, no setup, no explanation needed.
+**One moment of input**: Drawing takes under 60 seconds. No account, no setup, no explanation needed.
 
-**Non-trivial transformation** — A BEiT vision transformer classifies the sketch in real time and uses the result to decide where in the 3D world the creation lives. The classification also drives the physics profile (scale, animation, zone).
+**Non-trivial transformation**: A BEiT vision transformer classifies the sketch in real time and uses the result to decide where in the 3D world the creation lives. The classification also drives the physics profile (scale, animation, zone).
 
 **A stranger sees it** — The meadow is publicly deployed. Anyone with the link sees the same live world.
 
