@@ -587,7 +587,7 @@ export default function DrawingCanvas({ onComplete }) {
         ))}
 
         <label style={styles.customColorLabel} title="Pick a custom color">
-          <span style={styles.customColorSwatch}>C</span>
+          <span style={styles.customColorSwatch}>🎨</span>
           <input
             type="color"
             value={color}

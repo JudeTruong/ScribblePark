@@ -168,6 +168,17 @@ export default function App() {
   ] = useState(true);
 
   useEffect(() => {
+    const id = "scribblepark-font-fredoka";
+    if (document.getElementById(id)) return;
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href =
+      "https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap";
+    document.head.appendChild(link);
+  }, []);
+
+  useEffect(() => {
     getCreations()
       .then((savedCreations) => {
         const mapped = savedCreations.map((creation) => ({
@@ -454,22 +465,14 @@ export default function App() {
     <div style={pageStyle}>
       <div style={backgroundLayerStyle} />
       <div style={cardStyle}>
-        <span style={eyebrowStyle}>ScribblePark</span>
-
-        <h1 style={{ margin: "8px 0 12px", fontSize: "36px", lineHeight: 1.1 }}>
-          Add something to the park
-        </h1>
-
-        <p style={{ margin: "0 0 24px", color: "#5f6f5f", lineHeight: 1.6 }}>
-          Draw a creation and watch it come alive in the park.
+        <h1 style={heroTitleStyle}>ScribblePark</h1>
+        <p style={heroDescriptionStyle}>
+          Draw a little doodle, plant it in the park, and watch the meadow grow.
         </p>
 
         <button type="button" onClick={() => setStep("form")} style={primaryButtonStyle}>
           Add something
         </button>
-        <p style={{ marginTop: "14px", color: "#8b6d3f", fontSize: "13px", fontStyle: "italic" }}>
-          A sketchbook park for little summer doodles.
-        </p>
       </div>
     </div>
   );
@@ -485,6 +488,7 @@ const pageStyle = {
   position: "relative",
   overflow: "hidden",
   isolation: "isolate",
+  fontFamily: "'Fredoka', system-ui, sans-serif",
 };
 
 const backgroundLayerStyle = {
@@ -515,20 +519,26 @@ const cardStyle = {
   borderRadius: "18px",
   padding: "28px",
   boxShadow: "0 8px 20px rgba(33, 53, 35, 0.14)",
+  fontFamily: "'Fredoka', system-ui, sans-serif",
 };
 
-const eyebrowStyle = {
-  display: "inline-block",
-  margin: 0,
-  padding: "4px 8px",
-  borderRadius: "6px",
-  background: "#f2d98b",
-  color: "#456540",
+const heroTitleStyle = {
+  margin: "0 0 12px",
+  fontSize: "clamp(40px, 7vw, 64px)",
+  lineHeight: 1.05,
+  color: "#2f472f",
   fontWeight: 700,
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
-  fontSize: "11px",
-  border: "2px solid #4d6b3b",
+  letterSpacing: "0.02em",
+  fontFamily: "'Fredoka', system-ui, sans-serif",
+};
+
+const heroDescriptionStyle = {
+  margin: "0 0 20px",
+  color: "#5f6f5f",
+  fontSize: "16px",
+  lineHeight: 1.6,
+  maxWidth: "420px",
+  fontFamily: "'Fredoka', system-ui, sans-serif",
 };
 
 const primaryButtonStyle = {
@@ -539,6 +549,7 @@ const primaryButtonStyle = {
   color: "#fff",
   fontWeight: 700,
   cursor: "pointer",
+  fontFamily: "'Fredoka', system-ui, sans-serif",
 };
 
 const secondaryButtonStyle = {

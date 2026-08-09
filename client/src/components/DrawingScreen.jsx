@@ -21,10 +21,8 @@ export default function DrawingScreen({ onComplete }) {
     <div style={styles.page}>
       <div style={styles.backgroundLayer} />
       <header style={styles.header}>
-        <h1 style={styles.title}>ScribblePark</h1>
-        <p style={styles.subtitle}>
-          Draw something, name it, and plant it in the meadow.
-        </p>
+        <span style={styles.brand}>ScribblePark</span>
+        <p style={styles.title}>Draw something you’d find in a park, or not :p</p>
       </header>
 
       <main style={styles.canvasArea}>
@@ -71,21 +69,27 @@ const styles = {
     textAlign: "center",
     padding: "10px 18px",
     borderRadius: "8px",
-    background: "#fff9e8",
+    background: "rgba(255, 249, 232, 0.82)",
     border: "2px solid #4d6b3b",
+    boxShadow: "0 3px 10px rgba(41, 58, 36, 0.08)",
+  },
+  brand: {
+    display: "block",
+    marginBottom: "4px",
+    fontSize: "13px",
+    fontFamily: "'Fredoka', system-ui, sans-serif",
+    fontWeight: 700,
+    color: "#4d6b3b",
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
   },
   title: {
     margin: 0,
-    fontSize: "clamp(30px, 5.5vw, 42px)",
+    fontSize: "clamp(14px, 2.2vw, 18px)",
     fontFamily: "'Fredoka', system-ui, sans-serif",
-    fontWeight: 700,
-    color: "#33502e",
-    textShadow: "0 2px 0 rgba(255,255,255,0.5)",
-  },
-  subtitle: {
-    marginTop: "8px",
-    fontSize: "16px",
+    fontWeight: 500,
     color: "#5c6650",
+    lineHeight: 1.4,
   },
   canvasArea: {
     position: "relative",
