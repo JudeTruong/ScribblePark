@@ -268,6 +268,18 @@ export const TREE_ANCHORS = [
   { x: -8, y: 0, z: 12, scale: 1.25 },
   { x: 0, y: 0, z: 14, scale: 1.1 },
   { x: 9, y: 0, z: 12, scale: 1.3 },
+  { x: 24, y: 0, z: -8, scale: 1.55 },
+  { x: 29, y: 0, z: -15, scale: 1.35 },
+  { x: 21, y: 0, z: -22, scale: 1.45 },
+  { x: 11, y: 0, z: -31, scale: 1.3 },
+  { x: -3, y: 0, z: -35, scale: 1.5 },
+  { x: -19, y: 0, z: -29, scale: 1.35 },
+  { x: -32, y: 0, z: 6, scale: 1.25 },
+  { x: -29, y: 0, z: 22, scale: 1.4 },
+  { x: -16, y: 0, z: 33, scale: 1.3 },
+  { x: 5, y: 0, z: 36, scale: 1.35 },
+  { x: 23, y: 0, z: 29, scale: 1.25 },
+  { x: 34, y: 0, z: 11, scale: 1.45 },
 ];
 
 

@@ -11,6 +11,7 @@ import {
   LANDFILL_RADIUS,
   isInsideLandfill,
 } from "./utils/landfill";
+import { isInsideWalkingHill } from "./world/worldLayout";
 
 const CLASS_SETTINGS = {
   flower: {
@@ -150,11 +151,14 @@ function randomPlacement(classification) {
 
   // Underwater animals go inside the pond.
   if (profile.zone === "pond") {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.sqrt(Math.random());
+
     return {
       position: {
-        x: 6 + Math.random() * 4 - 2,
+        x: 6 + Math.cos(angle) * distance * 2.35,
         y: 0.05,
-        z: 2 + Math.random() * 2 - 1,
+        z: 2 + Math.sin(angle) * distance * 1.35,
       },
 
       scale,
@@ -163,11 +167,14 @@ function randomPlacement(classification) {
 
   // Ducks and other floating animals stay on the surface.
   if (profile.zone === "pondSurface") {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.sqrt(Math.random());
+
     return {
       position: {
-        x: 6 + Math.random() * 4 - 2,
+        x: 6 + Math.cos(angle) * distance * 2.2,
         y: 0.12,
-        z: 2 + Math.random() * 2 - 1,
+        z: 2 + Math.sin(angle) * distance * 1.25,
       },
 
       scale,
@@ -229,8 +236,11 @@ function randomPlacement(classification) {
   let blocked;
 
   do {
-    x = Math.random() * 30 - 15;
-    z = Math.random() * 30 - 15;
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.sqrt(Math.random()) * 38;
+
+    x = Math.cos(angle) * distance;
+    z = Math.sin(angle) * distance;
 
     const pondX = (x - 6) / 4.8;
     const pondZ = (z - 2) / 3.7;
@@ -239,7 +249,9 @@ function randomPlacement(classification) {
       pondX ** 2 + pondZ ** 2 < 1;
 
     blocked =
-      insidePond || isInsideLandfill(x, z);
+      insidePond ||
+      isInsideLandfill(x, z) ||
+      isInsideWalkingHill(x, z);
   } while (blocked);
 
   return {

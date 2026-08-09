@@ -27,10 +27,11 @@ import * as THREE from "three";
 import AnimatedCreation from "./AnimatedCreation";
 import InteractionController from "./InteractionController";
 import Environment from "./Environment";
+import { getWalkingHillHeight } from "./worldLayout";
 
-const WIDE_POSITION = [0, 11, 24];
-const FIRST_PERSON_POSITION = [0, 1.4, 12];
-const WORLD_BOUNDARY = 20;
+const WIDE_POSITION = [0, 38, 68];
+const FIRST_PERSON_POSITION = [0, 1.4, 25];
+const WORLD_BOUNDARY = 44;
 const GROUND_HEIGHT = 1.4;
 
 const CLASS_INFO = {
@@ -132,14 +133,6 @@ function displayCreationName(value, fallback) {
     : fallback;
 }
 
-function displayCreationNumber(creation) {
-  if (creation?.isPending) {
-    return "#?";
-  }
-
-  return `#${creation.id}`;
-}
-
 // "teddy bear" -> "Teddy Bear", for the species shown on the card.
 function titleCaseLabel(value) {
   return value
@@ -152,7 +145,6 @@ function titleCaseLabel(value) {
     )
     .join(" ");
 }
-
 function normalizeClassification(creation) {
   return (
     creation?.classification ||
@@ -293,19 +285,26 @@ function FirstPersonController({ active }) {
       camera.position.z += movement.z;
     }
 
-    // Jumping and gravity.
-    verticalVelocity.current -=
-      gravity * safeDelta;
+    const terrainHeight = getWalkingHillHeight(
+      camera.position.x,
+      camera.position.z
+    );
+    const localGroundHeight = GROUND_HEIGHT + terrainHeight;
 
-    verticalPosition.current +=
-      verticalVelocity.current * safeDelta;
+    // Follow gentle terrain while grounded; use gravity only in the air.
+    if (grounded.current) {
+      verticalPosition.current = localGroundHeight;
+    } else {
+      verticalVelocity.current -= gravity * safeDelta;
+      verticalPosition.current += verticalVelocity.current * safeDelta;
+    }
 
     if (
       verticalPosition.current <=
-      GROUND_HEIGHT
+      localGroundHeight
     ) {
       verticalPosition.current =
-        GROUND_HEIGHT;
+        localGroundHeight;
 
       verticalVelocity.current = 0;
       grounded.current = true;
@@ -630,7 +629,7 @@ export default function World({
           position: WIDE_POSITION,
           fov: 45,
           near: 0.1,
-          far: 150,
+          far: 240,
         }}
       >
         <Environment />
@@ -675,8 +674,8 @@ export default function World({
           enablePan={false}
           enableDamping
           dampingFactor={0.06}
-          minDistance={12}
-          maxDistance={35}
+          minDistance={28}
+          maxDistance={82}
           minPolarAngle={
             Math.PI / 4.5
           }
@@ -725,7 +724,7 @@ export default function World({
       {inspectedCreation && (
         <div style={informationCardStyle}>
           <div style={classLabelStyle}>
-            {displayCreationNumber(inspectedCreation)} · {inspectedInfo.label}
+            {inspectedInfo.label}
           </div>
 
           <h2
