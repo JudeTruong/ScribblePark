@@ -3,7 +3,7 @@ import {
   LANDFILL_CENTRE,
   LANDFILL_RADIUS,
 } from "../utils/landfill";
-import { WALKING_HILLS } from "./worldLayout";
+import { PONDS, WALKING_HILLS } from "./worldLayout";
 
 function Tree({ position, scale = 1, color = "#76ad62" }) {
   return (
@@ -349,7 +349,7 @@ function GroundDetails() {
   );
 }
 
-function Pond() {
+function Pond({ pond }) {
   const lilyPads = [
     { position: [-1.6, 0.09, -0.4], scale: 0.35 },
     { position: [0.3, 0.09, 0.7], scale: 0.28 },
@@ -390,7 +390,10 @@ function Pond() {
   ];
 
   return (
-    <group position={[6, 0.02, 2]}>
+    <group
+      position={[pond.x, 0.02, pond.z]}
+      scale={[pond.scale, 1, pond.scale]}
+    >
       {/* Darker pond bed gives the transparent water visible depth. */}
       <mesh
         position={[0, 0.012, 0]}
@@ -892,8 +895,10 @@ export default function Environment() {
         ))}
       </group>
 
-      {/* Pond */}
-      <Pond />
+      {/* Ponds share their layout with the creature spawning system. */}
+      {PONDS.map((pond) => (
+        <Pond key={pond.id} pond={pond} />
+      ))}
 
       {/* Larger foreground trees */}
       <Tree position={[-11, 0, -7]} scale={1.5} />

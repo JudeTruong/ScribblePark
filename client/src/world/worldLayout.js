@@ -10,6 +10,27 @@ export const WALKING_HILLS = [
   { x: -9, z: -32, width: 8, depth: 5.2, height: 1.1, color: "#789e57" },
 ];
 
+// Both the renderer and the spawning system read this list. Keeping the
+// pond centres and sizes here prevents creatures from being placed in water
+// that does not match what the player sees.
+export const PONDS = [
+  { id: "meadow-pond", x: 6, z: 2, scale: 1 },
+  { id: "northwest-pond", x: -20, z: 14, scale: 1.55 },
+];
+
+export function isInsidePond(x, z, pond, padding = 0) {
+  const radiusX = 4.8 * pond.scale + padding;
+  const radiusZ = 3.7 * pond.scale + padding;
+  const normalizedX = (x - pond.x) / radiusX;
+  const normalizedZ = (z - pond.z) / radiusZ;
+
+  return normalizedX ** 2 + normalizedZ ** 2 < 1;
+}
+
+export function isInsideAnyPond(x, z, padding = 0) {
+  return PONDS.some((pond) => isInsidePond(x, z, pond, padding));
+}
+
 export function isInsideWalkingHill(x, z, padding = 0.8) {
   return WALKING_HILLS.some((hill) => {
     const normalizedX = (x - hill.x) / (hill.width + padding);
