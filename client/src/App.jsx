@@ -90,11 +90,6 @@ const CLASS_SETTINGS = {
 };
 
 import {
-  createCreation,
-  getCreations,
-} from "./api/creations";
-
-import {
   getCreationProfile,
   normalizeClassification,
   randomProfileScale,
@@ -189,7 +184,7 @@ function randomPlacement(classification) {
 
   // Litter collects in the dump in the
   // back-left corner.
-  if (settings.zone === "landfill") {
+  if (profile.classification === "landfill") {
     const angle =
       Math.random() * Math.PI * 2;
 
