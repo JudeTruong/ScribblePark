@@ -29,6 +29,9 @@ export default function DrawingCanvas({ onComplete }) {
   const [color, setColor] = useState(COLOR_PRESETS[0]);
   const [hasDrawn, setHasDrawn] = useState(false);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const isSubmittingRef = useRef(false);
 
   // Initialize canvas as fully transparent on mount
   useEffect(() => {
@@ -141,6 +144,19 @@ export default function DrawingCanvas({ onComplete }) {
     setError("");
   };
 
+  useEffect(() => {
+    if (!isSubmitting) {
+      setLoadingProgress(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setLoadingProgress((prev) => Math.min(prev + Math.random() * 8 + 4, 95));
+    }, 120);
+
+    return () => clearInterval(interval);
+  }, [isSubmitting]);
+
   const getTrimBounds = (canvas) => {
     const ctx = canvas.getContext("2d");
     const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -211,27 +227,69 @@ export default function DrawingCanvas({ onComplete }) {
     return true;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isSubmittingRef.current) return;
     if (isCanvasEmpty()) {
       setError("Draw something before planting it.");
       return;
     }
 
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+    setError("");
+
     const canvas = canvasRef.current;
     const alignedCanvas = getAlignedCanvas(canvas);
 
-    alignedCanvas.toBlob((imageBlob) => {
-      if (!imageBlob) {
-        setError("Couldn't export your drawing. Try again.");
-        return;
-      }
-      const previewUrl = URL.createObjectURL(imageBlob);
-      onComplete({
-        category: "flower",
-        imageBlob,
-        previewUrl,
+    const imageBlob = await new Promise((resolve, reject) => {
+      alignedCanvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Couldn't export your drawing. Try again."));
+          return;
+        }
+        resolve(blob);
+      }, "image/png");
+    }).catch((err) => {
+      setError(err.message);
+      return null;
+    });
+
+    if (!imageBlob) {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(imageBlob);
+    const formData = new FormData();
+    formData.append("image", imageBlob, "drawing.png");
+
+    let category = "flower";
+    try {
+      const response = await fetch("http://127.0.0.1:8000/classify", {
+        method: "POST",
+        body: formData,
       });
-    }, "image/png");
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result?.results?.[0]?.label) {
+          category = result.results[0].label;
+        }
+      } else {
+        const errorBody = await response.text();
+        console.warn("Classification failed:", response.status, errorBody);
+      }
+    } catch (fetchError) {
+      console.warn("Classification request failed:", fetchError);
+    }
+
+    setLoadingProgress(100);
+    onComplete({
+      category,
+      imageBlob,
+      previewUrl,
+    });
   };
 
   return (
@@ -306,11 +364,17 @@ export default function DrawingCanvas({ onComplete }) {
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={!hasDrawn}
-        style={{ ...styles.plantButton, ...(hasDrawn ? {} : styles.plantButtonDisabled) }}
+        disabled={!hasDrawn || isSubmitting}
+        style={{ ...styles.plantButton, ...((!hasDrawn || isSubmitting) ? styles.plantButtonDisabled : {}) }}
       >
-        Plant in World
+        {isSubmitting ? "Planting..." : "Plant in World"}
       </button>
+
+      {isSubmitting && (
+        <div style={styles.loadingBarBackground}>
+          <div style={{ ...styles.loadingBarForeground, width: `${loadingProgress}%` }} />
+        </div>
+      )}
     </div>
   );
 }
@@ -408,5 +472,19 @@ const styles = {
   plantButtonDisabled: {
     background: "#a5d6a7",
     cursor: "not-allowed",
+  },
+  loadingBarBackground: {
+    width: `${DISPLAY_SIZE}px`,
+    height: "10px",
+    borderRadius: "999px",
+    background: "#e6e6e6",
+    overflow: "hidden",
+    marginTop: "12px",
+  },
+  loadingBarForeground: {
+    height: "100%",
+    borderRadius: "999px",
+    background: "linear-gradient(90deg, #8bc34a, #4caf50)",
+    transition: "width 120ms ease",
   },
 };
