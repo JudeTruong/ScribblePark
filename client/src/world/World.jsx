@@ -327,17 +327,69 @@ function FirstPersonController({ active }) {
   return null;
 }
 
-function CameraReset({ mode }) {
+function CameraTransition({ mode, onComplete }) {
   const { camera } = useThree();
+  const transition = useRef(null);
 
   useEffect(() => {
-    if (mode !== "wide") return;
+    if (mode === "wide") {
+      camera.position.set(...WIDE_POSITION);
+      camera.rotation.order = "XYZ";
+      camera.rotation.set(0, 0, 0);
+      camera.lookAt(0, 1, 0);
+      transition.current = null;
+      return;
+    }
 
-    camera.position.set(...WIDE_POSITION);
-    camera.rotation.order = "XYZ";
-    camera.rotation.set(0, 0, 0);
-    camera.lookAt(0, 1, 0);
+    if (mode !== "entering" && mode !== "exiting") {
+      transition.current = null;
+      return;
+    }
+
+    const targetPosition = new THREE.Vector3(
+      ...(mode === "entering" ? FIRST_PERSON_POSITION : WIDE_POSITION)
+    );
+    const targetCamera = camera.clone();
+    targetCamera.position.copy(targetPosition);
+    targetCamera.rotation.order = mode === "entering" ? "YXZ" : "XYZ";
+    targetCamera.lookAt(0, mode === "entering" ? GROUND_HEIGHT : 1, 0);
+
+    transition.current = {
+      elapsed: 0,
+      duration: mode === "entering" ? 1.35 : 1.1,
+      startPosition: camera.position.clone(),
+      startQuaternion: camera.quaternion.clone(),
+      targetPosition,
+      targetQuaternion: targetCamera.quaternion.clone(),
+      mode,
+    };
   }, [mode, camera]);
+
+  useFrame((_, delta) => {
+    const current = transition.current;
+    if (!current) return;
+
+    current.elapsed += Math.min(delta, 0.1);
+    const progress = Math.min(current.elapsed / current.duration, 1);
+    const eased = progress * progress * (3 - 2 * progress);
+
+    camera.position.lerpVectors(
+      current.startPosition,
+      current.targetPosition,
+      eased
+    );
+    camera.quaternion.slerpQuaternions(
+      current.startQuaternion,
+      current.targetQuaternion,
+      eased
+    );
+
+    if (progress === 1) {
+      const completedMode = current.mode;
+      transition.current = null;
+      onComplete(completedMode);
+    }
+  });
 
   return null;
 }
@@ -361,6 +413,11 @@ export default function World({
   const firstPerson =
     mode === "firstPerson";
 
+  const entering = mode === "entering";
+  const exiting = mode === "exiting";
+  const transitioning = entering || exiting;
+  const pointerControlsActive = entering || firstPerson;
+
   const targetedCreation = useMemo(
     () =>
       creations.find(
@@ -376,7 +433,7 @@ export default function World({
     }, []);
 
   function enterFirstPerson() {
-    setMode("firstPerson");
+    setMode("entering");
     setTargetedId(null);
     setInspectedCreation(null);
 
@@ -396,7 +453,9 @@ export default function World({
   }
 
   function returnToWideView() {
-    setMode("wide");
+    if (mode === "wide" || mode === "exiting") return;
+
+    setMode("exiting");
     setTargetedId(null);
     setInspectedCreation(null);
 
@@ -404,6 +463,14 @@ export default function World({
       document.exitPointerLock();
     }
   }
+
+  const handleTransitionComplete = useCallback((completedMode) => {
+    if (completedMode === "entering") {
+      setMode("firstPerson");
+    } else if (completedMode === "exiting") {
+      setMode("wide");
+    }
+  }, []);
 
   useEffect(() => {
     function handleInspect(event) {
@@ -488,7 +555,7 @@ export default function World({
             WASD to move · Mouse to look ·
             Space to jump · Esc for wide view
           </div>
-        ) : (
+        ) : mode === "wide" ? (
           <button
             type="button"
             onClick={enterFirstPerson}
@@ -496,7 +563,7 @@ export default function World({
           >
             Enter Meadow
           </button>
-        )}
+        ) : null}
       </div>
 
       <Canvas
@@ -533,7 +600,10 @@ export default function World({
           />
         ))}
 
-        <CameraReset mode={mode} />
+        <CameraTransition
+          mode={mode}
+          onComplete={handleTransitionComplete}
+        />
 
         <FirstPersonController
           active={firstPerson}
@@ -548,12 +618,12 @@ export default function World({
         />
 
         <PointerLockControls
-          enabled={firstPerson}
+          enabled={pointerControlsActive}
           onUnlock={returnToWideView}
         />
 
         <OrbitControls
-          enabled={!firstPerson}
+          enabled={mode === "wide"}
           target={[0, 1, 0]}
           enablePan={false}
           enableDamping
@@ -573,6 +643,16 @@ export default function World({
           <Pixelation granularity={4} />
         </EffectComposer>
       </Canvas>
+
+      {transitioning && (
+        <div style={transitionOverlayStyle}>
+          <div style={transitionLabelStyle}>
+            {entering
+              ? "Entering the meadow…"
+              : "Returning to overview…"}
+          </div>
+        </div>
+      )}
 
       {/* First-person crosshair */}
       {firstPerson && (
@@ -649,6 +729,30 @@ const instructionsStyle = {
   color: "#315638",
   fontSize: "13px",
   border: "2px solid #4d6b3b",
+};
+
+const transitionOverlayStyle = {
+  position: "absolute",
+  inset: 0,
+  zIndex: 25,
+  display: "grid",
+  placeItems: "end center",
+  paddingBottom: "54px",
+  pointerEvents: "none",
+  background:
+    "radial-gradient(circle at center, transparent 48%, rgba(36, 58, 38, 0.18) 100%)",
+};
+
+const transitionLabelStyle = {
+  padding: "10px 16px",
+  border: "2px solid rgba(255, 255, 255, 0.9)",
+  borderRadius: "999px",
+  background: "rgba(49, 75, 53, 0.86)",
+  color: "white",
+  fontSize: "13px",
+  fontWeight: "700",
+  letterSpacing: "0.02em",
+  boxShadow: "0 8px 24px rgba(25, 45, 29, 0.22)",
 };
 
 const crosshairStyle = {
