@@ -105,6 +105,12 @@ const CLASS_INFO = {
     description:
       "A water bird capable of swimming, walking and flying.",
   },
+
+  landfill: {
+    label: "Litter",
+    description:
+      "Not part of the park's ecosystem - this one belongs in the landfill.",
+  },
 };
 
 function displayCreationName(value, fallback) {

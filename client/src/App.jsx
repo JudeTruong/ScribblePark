@@ -1,11 +1,93 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
+﻿import { useEffect, useMemo, useState } from "react";
 import World from "./world/World";
 import DrawingScreen from "./components/DrawingScreen";
+import { createCreation, getCreations } from "./api/creations";
+import { resolveCategory } from "./utils/classificationMap";
+import {
+  LANDFILL_CENTRE,
+  LANDFILL_RADIUS,
+  isInsideLandfill,
+} from "./utils/landfill";
+
+const CLASS_SETTINGS = {
+  flower: {
+    minScale: 0.8,
+    maxScale: 1.2,
+    zone: "land",
+  },
+
+  tree: {
+    minScale: 2,
+    maxScale: 3,
+    zone: "land",
+  },
+
+  bush: {
+    minScale: 0.8,
+    maxScale: 1.3,
+    zone: "land",
+  },
+
+  mushroom: {
+    minScale: 0.4,
+    maxScale: 0.7,
+    zone: "land",
+  },
+
+  rabbit: {
+    minScale: 0.7,
+    maxScale: 1,
+    zone: "land",
+  },
+
+  toad: {
+    minScale: 0.5,
+    maxScale: 0.8,
+    zone: "pondEdge",
+  },
+
+  bug: {
+    minScale: 0.2,
+    maxScale: 0.4,
+    zone: "land",
+  },
+
+  snail: {
+    minScale: 0.25,
+    maxScale: 0.45,
+    zone: "land",
+  },
+
+  butterfly: {
+    minScale: 0.35,
+    maxScale: 0.6,
+    zone: "air",
+  },
+
+  bird: {
+    minScale: 0.6,
+    maxScale: 1,
+    zone: "air",
+  },
+
+  fish: {
+    minScale: 0.5,
+    maxScale: 0.8,
+    zone: "pond",
+  },
+
+  duck: {
+    minScale: 0.7,
+    maxScale: 1,
+    zone: "pond",
+  },
+
+  landfill: {
+    minScale: 0.5,
+    maxScale: 0.8,
+    zone: "landfill",
+  },
+};
 
 import {
   createCreation,
@@ -105,12 +187,37 @@ function randomPlacement(classification) {
     };
   }
 
-  // Land and flying creatures begin over land.
-  // Flying animations raise them into the air.
+  // Litter collects in the dump in the
+  // back-left corner.
+  if (settings.zone === "landfill") {
+    const angle =
+      Math.random() * Math.PI * 2;
+
+    // Square root keeps the scatter even
+    // across the circle instead of
+    // clumping in the middle.
+    const distance =
+      Math.sqrt(Math.random()) *
+      (LANDFILL_RADIUS - 0.45);
+
+    return {
+      position: {
+        x:
+          LANDFILL_CENTRE.x +
+          Math.cos(angle) * distance,
+        y: 0,
+        z:
+          LANDFILL_CENTRE.z +
+          Math.sin(angle) * distance,
+      },
+      scale,
+    };
+  }
+
+  // Everything else appears on land.
   let x;
   let z;
-  let insidePond;
-  let outsideSafeArea;
+  let blocked;
 
   do {
     x = Math.random() * 30 - 15;
@@ -119,17 +226,12 @@ function randomPlacement(classification) {
     const pondX = (x - 6) / 4.8;
     const pondZ = (z - 2) / 3.7;
 
-    insidePond =
-      pondX ** 2 +
-        pondZ ** 2 <
-      1;
+    const insidePond =
+      pondX ** 2 + pondZ ** 2 < 1;
 
-    outsideSafeArea =
-      Math.hypot(x, z) > 17;
-  } while (
-    insidePond ||
-    outsideSafeArea
-  );
+    blocked =
+      insidePond || isInsideLandfill(x, z);
+  } while (blocked);
 
   return {
     position: {
@@ -199,11 +301,12 @@ export default function App() {
     confidence,
     predictions = [],
   }) {
+    // Raw model label (e.g. "whale") -> park category (e.g. "fish"),
+    // using top-k predictions as a fallback when the top label maps to
+    // landfill. Then normalizeClassification applies local aliases.
     const normalizedClassification =
       normalizeClassification(
-        classification ||
-          type ||
-          "unknown"
+        resolveCategory(type, predictions)
       );
 
     const placement =
