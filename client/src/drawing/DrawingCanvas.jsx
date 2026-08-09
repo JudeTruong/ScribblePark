@@ -226,8 +226,9 @@ export default function DrawingCanvas({ onComplete }) {
         return;
       }
       const previewUrl = URL.createObjectURL(imageBlob);
+      const category = classify_image(imageBlob);
       onComplete({
-        category: "flower",
+        category,
         imageBlob,
         previewUrl,
       });
