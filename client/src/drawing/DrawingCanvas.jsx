@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 
+const CLASSIFIER_URL = import.meta.env.VITE_CLASSIFIER_URL || "http://localhost:8000";
+
 // Internal drawing resolution — must stay 64x64 regardless of display size
 const CANVAS_SIZE = 64;
 // How large the canvas appears on screen (CSS only, doesn't affect resolution)
@@ -486,7 +488,7 @@ export default function DrawingCanvas({ onComplete }) {
     let responseOk = false;
 
     try {
-      const response = await fetch("http://localhost:8000/api/classify", {
+      const response = await fetch(`${CLASSIFIER_URL}/api/classify`, {
         method: "POST",
         body: formData,
       });
