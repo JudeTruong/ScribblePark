@@ -204,18 +204,20 @@ export default function App() {
 
   useEffect(() => {
     getCreations()
-      .then((savedCreations) =>
-        setCreations(
-          savedCreations.map((creation) => ({
-            ...creation,
-            name:
-              displayCreationName(
-                creation.name ||
-                  creation.creatorName
-              ),
-          }))
-        )
-      )
+      .then((savedCreations) => {
+        const mapped = savedCreations.map((creation) => ({
+          ...creation,
+          name:
+            displayCreationName(
+              creation.name ||
+                creation.creatorName
+            ),
+        }));
+        setCreations(mapped);
+        if (mapped.length > 0) {
+          setStep("world");
+        }
+      })
       .catch(console.error);
   }, []);
 
