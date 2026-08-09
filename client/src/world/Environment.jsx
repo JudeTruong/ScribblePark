@@ -1,4 +1,8 @@
-import { ContactShadows, Sky } from "@react-three/drei";
+﻿import { ContactShadows, Sky, Text } from "@react-three/drei";
+import {
+  LANDFILL_CENTRE,
+  LANDFILL_RADIUS,
+} from "../utils/landfill";
 
 function Tree({ position, scale = 1, color = "#76ad62" }) {
   return (
@@ -283,6 +287,141 @@ function DistantTree({ position, scale }) {
   );
 }
 
+function Landfill() {
+  return (
+    <group
+      position={[
+        LANDFILL_CENTRE.x,
+        0,
+        LANDFILL_CENTRE.z,
+      ]}
+    >
+      {/* Bare dirt floor of the dump. */}
+      <mesh
+        position={[0, 0.012, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
+        <circleGeometry
+          args={[LANDFILL_RADIUS, 48]}
+        />
+
+        <meshStandardMaterial
+          color="#8a7f6b"
+          roughness={1}
+        />
+      </mesh>
+
+      {/* Darker scuffed centre. */}
+      <mesh
+        position={[0.3, 0.014, -0.2]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <circleGeometry
+          args={[LANDFILL_RADIUS * 0.6, 32]}
+        />
+
+        <meshStandardMaterial
+          color="#7a6f5c"
+          roughness={1}
+        />
+      </mesh>
+
+      {/* Signpost, facing the meadow. */}
+      <group
+        position={[
+          LANDFILL_RADIUS * 0.55,
+          0,
+          LANDFILL_RADIUS * 0.72,
+        ]}
+        rotation={[0, Math.PI * 0.22, 0]}
+      >
+        <mesh position={[0, 0.62, 0]} castShadow>
+          <cylinderGeometry
+            args={[0.075, 0.09, 1.24, 8]}
+          />
+
+          <meshStandardMaterial
+            color="#8a6a45"
+            roughness={0.9}
+          />
+        </mesh>
+
+        <mesh position={[0, 1.32, 0]} castShadow>
+          <boxGeometry
+            args={[1.65, 0.62, 0.09]}
+          />
+
+          <meshStandardMaterial
+            color="#c8a06a"
+            roughness={0.85}
+          />
+        </mesh>
+
+        <Text
+          position={[0, 1.32, 0.055]}
+          fontSize={0.26}
+          color="#4a3823"
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0}
+        >
+          LANDFILL
+        </Text>
+      </group>
+
+      {/* Scattered rubble. */}
+      <mesh
+        position={[-1.1, 0.16, 0.5]}
+        castShadow
+      >
+        <dodecahedronGeometry args={[0.2, 0]} />
+
+        <meshStandardMaterial
+          color="#9b958a"
+          roughness={0.95}
+        />
+      </mesh>
+
+      <mesh
+        position={[0.45, 0.13, -1.15]}
+        castShadow
+      >
+        <dodecahedronGeometry args={[0.15, 0]} />
+
+        <meshStandardMaterial
+          color="#8c8579"
+          roughness={0.95}
+        />
+      </mesh>
+
+      <mesh
+        position={[-0.7, 0.12, -0.9]}
+        castShadow
+      >
+        <dodecahedronGeometry args={[0.13, 0]} />
+
+        <meshStandardMaterial
+          color="#a39c90"
+          roughness={0.95}
+        />
+      </mesh>
+
+      <mesh
+        position={[1.2, 0.15, 0.15]}
+        castShadow
+      >
+        <dodecahedronGeometry args={[0.17, 0]} />
+
+        <meshStandardMaterial
+          color="#9b958a"
+          roughness={0.95}
+        />
+      </mesh>
+    </group>
+  );
+}
+
 function SettingSun() {
   return (
     <mesh position={[-18, 7, -28]}>
@@ -513,6 +652,9 @@ export default function Environment() {
       <TinyFlower position={[9, 0, -4]} color="#f7c2d4" />
       <TinyFlower position={[11, 0, 3]} color="#f8e193" />
       <TinyFlower position={[2, 0, 9]} color="#c8b7f4" />
+
+      {/* Landfill in the back-left corner */}
+      <Landfill />
 
       {/* Complete cloud ring */}
       <group>

@@ -1,9 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import World from "./world/World";
 import DrawingCanvas from "./drawing/DrawingCanvas";
 import DrawingScreen from "./components/DrawingScreen";
 import { createCreation, getCreations } from "./api/creations";
 import { resolveCategory } from "./utils/classificationMap";
+import {
+  LANDFILL_CENTRE,
+  LANDFILL_RADIUS,
+  isInsideLandfill,
+} from "./utils/landfill";
 
 const CLASS_SETTINGS = {
   flower: {
@@ -81,7 +86,7 @@ const CLASS_SETTINGS = {
   landfill: {
     minScale: 0.5,
     maxScale: 0.8,
-    zone: "land",
+    zone: "landfill",
   },
 };
 
@@ -169,10 +174,37 @@ function randomPlacement(classification) {
     };
   }
 
+  // Litter collects in the dump in the
+  // back-left corner.
+  if (settings.zone === "landfill") {
+    const angle =
+      Math.random() * Math.PI * 2;
+
+    // Square root keeps the scatter even
+    // across the circle instead of
+    // clumping in the middle.
+    const distance =
+      Math.sqrt(Math.random()) *
+      (LANDFILL_RADIUS - 0.45);
+
+    return {
+      position: {
+        x:
+          LANDFILL_CENTRE.x +
+          Math.cos(angle) * distance,
+        y: 0,
+        z:
+          LANDFILL_CENTRE.z +
+          Math.sin(angle) * distance,
+      },
+      scale,
+    };
+  }
+
   // Everything else appears on land.
   let x;
   let z;
-  let insidePond;
+  let blocked;
 
   do {
     x = Math.random() * 24 - 12;
@@ -181,9 +213,12 @@ function randomPlacement(classification) {
     const pondX = (x - 6) / 4.8;
     const pondZ = (z - 2) / 3.7;
 
-    insidePond =
+    const insidePond =
       pondX ** 2 + pondZ ** 2 < 1;
-  } while (insidePond);
+
+    blocked =
+      insidePond || isInsideLandfill(x, z);
+  } while (blocked);
 
   return {
     position: {
