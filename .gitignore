@@ -34,3 +34,4 @@ mono_crash.*.json
 /server/node_modules
 *.env
 /server/__pycache__
+server/__pycache__/classify.cpython-313.pyc
