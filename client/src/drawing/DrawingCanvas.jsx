@@ -586,7 +586,7 @@ export default function DrawingCanvas({ onComplete }) {
 
       <p style={styles.stageHint}>
         {phase === "outline"
-          ? "Draw the outline (black only). When you’re done, tap Next to move on."
+          ? "Draw the outline (black only)."
           : "Add color on top of the outline, around or inside!"}
       </p>
 

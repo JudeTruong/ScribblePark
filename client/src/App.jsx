@@ -607,9 +607,9 @@ export default function App() {
     <div style={pageStyle}>
       <div style={backgroundLayerStyle} />
       <div style={cardStyle}>
-        <h1 style={heroTitleStyle}>ScribblePark</h1>
+        <h1 style={heroTitleStyle}>Scribble Park</h1>
         <p style={heroDescriptionStyle}>
-          Draw a little doodle, plant it in the park, and watch the meadow grow.
+          Draw a little doodle & see it planted in the park.
         </p>
 
         <button type="button" onClick={() => setStep("form")} style={primaryButtonStyle}>

@@ -22,7 +22,7 @@ export default function DrawingScreen({ onComplete }) {
       <div style={styles.backgroundLayer} />
       <h1 style={styles.brand}>ScribblePark</h1>
       <header style={styles.header}>
-        <p style={styles.title}>Draw something you’d find in a park, or not :p</p>
+        <p style={styles.title}>Draw something you’d find in a park (or something you wouldn't find in a park 😉)</p>
       </header>
 
       <main style={styles.canvasArea}>
