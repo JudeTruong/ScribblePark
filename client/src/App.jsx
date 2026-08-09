@@ -274,18 +274,6 @@ export default function App() {
             {summary}
           </p>
 
-          {creations.length > 0 && creations[creations.length - 1].type && (
-            <p
-              style={{
-                margin: "0 0 12px",
-                color: "#3c5d4b",
-                fontWeight: 600,
-              }}
-            >
-              Latest prediction: {creations[creations.length - 1].type} {creations[creations.length - 1].confidence != null ? `(${Math.round(creations[creations.length - 1].confidence * 100)}%)` : ""}
-            </p>
-          )}
-
           <button
             type="button"
             onClick={() =>

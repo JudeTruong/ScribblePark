@@ -31,7 +31,6 @@ export default function DrawingCanvas({ onComplete }) {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [classifierResult, setClassifierResult] = useState(null);
   const isSubmittingRef = useRef(false);
 
   // Initialize canvas as fully transparent on mount
@@ -242,7 +241,7 @@ export default function DrawingCanvas({ onComplete }) {
     const canvas = canvasRef.current;
     const alignedCanvas = getAlignedCanvas(canvas);
 
-    const imageBlob = await new Promise((resolve, reject) => {
+    const originalBlob = await new Promise((resolve, reject) => {
       alignedCanvas.toBlob((blob) => {
         if (!blob) {
           reject(new Error("Couldn't export your drawing. Try again."));
@@ -255,23 +254,43 @@ export default function DrawingCanvas({ onComplete }) {
       return null;
     });
 
-    if (!imageBlob) {
+    if (!originalBlob) {
       isSubmittingRef.current = false;
       setIsSubmitting(false);
       return;
     }
 
-    const previewUrl = URL.createObjectURL(imageBlob);
-    console.log("[DrawingCanvas] Drawing blob type:", imageBlob.type);
-    console.log("[DrawingCanvas] Drawing blob size:", imageBlob.size);
-    if (imageBlob.type !== "image/png") {
-      console.warn("[DrawingCanvas] Expected image/png but got:", imageBlob.type);
+    const previewUrl = URL.createObjectURL(originalBlob);
+
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = CANVAS_SIZE;
+    exportCanvas.height = CANVAS_SIZE;
+    const exportCtx = exportCanvas.getContext("2d");
+    exportCtx.fillStyle = "#ffffff";
+    exportCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    exportCtx.drawImage(alignedCanvas, 0, 0);
+
+    const classifierBlob = await new Promise((resolve, reject) => {
+      exportCanvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Couldn't export classifier image."));
+          return;
+        }
+        resolve(blob);
+      }, "image/png");
+    }).catch((err) => {
+      setError(err.message);
+      return null;
+    });
+
+    if (!classifierBlob) {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+      return;
     }
 
     const formData = new FormData();
-    formData.append("file", imageBlob, "drawing.png");
-
-    console.log("[DrawingCanvas] Sending drawing to classifier...");
+    formData.append("file", classifierBlob, "drawing-white.png");
 
     let type = null;
     let confidence = null;
@@ -286,7 +305,6 @@ export default function DrawingCanvas({ onComplete }) {
 
       responseOk = response.ok;
       const result = await response.json();
-      console.log("[DrawingCanvas] Classifier result:", result);
 
       predictions = result?.predictions ?? [];
       type = result?.type ?? predictions?.[0]?.label ?? null;
@@ -306,15 +324,9 @@ export default function DrawingCanvas({ onComplete }) {
       return;
     }
 
-    setClassifierResult({
-      type,
-      confidence,
-      predictions,
-    });
-
     setLoadingProgress(100);
     onComplete({
-      imageBlob,
+      imageBlob: originalBlob,
       previewUrl,
       type,
       confidence,
@@ -399,12 +411,6 @@ export default function DrawingCanvas({ onComplete }) {
       >
         {isSubmitting ? "Planting..." : "Plant in World"}
       </button>
-
-      {classifierResult?.type && (
-        <p style={styles.predictionText}>
-          Classifier result: {classifierResult.type} {classifierResult.confidence != null ? `(${Math.round(classifierResult.confidence * 100)}%)` : ""}
-        </p>
-      )}
 
       {isSubmitting && (
         <div style={styles.loadingBarBackground}>
@@ -495,12 +501,6 @@ const styles = {
     fontSize: "14px",
   },
   error: { color: "#e63946", fontSize: "13px", margin: 0 },
-  predictionText: {
-    margin: "0 0 12px",
-    color: "#264653",
-    fontSize: "15px",
-    fontWeight: 600,
-  },
   plantButton: {
     padding: "12px 28px",
     borderRadius: "999px",
