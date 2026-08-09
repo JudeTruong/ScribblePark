@@ -197,10 +197,13 @@ export default function App() {
     previewUrl,
     name = "Unnamed Creation",
     classification,
+    type = null,
+    confidence = null,
+    predictions = [],
   }) {
     const normalizedClassification =
       normalizeClassification(
-        classification
+        classification ?? type
       );
 
     const placement = randomPlacement(
@@ -211,11 +214,14 @@ export default function App() {
       id: `entry-${Date.now()}`,
       name,
       description:
-        `Hand-drawn ${normalizedClassification}`,
+        `Hand-drawn ${type || normalizedClassification}`,
       classification:
         normalizedClassification,
       category:
         normalizedClassification,
+      type,
+      confidence,
+      predictions,
       imageUrl: previewUrl,
       position: placement.position,
       scale: placement.scale,

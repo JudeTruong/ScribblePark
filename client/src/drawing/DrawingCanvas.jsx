@@ -241,7 +241,7 @@ export default function DrawingCanvas({ onComplete }) {
     const canvas = canvasRef.current;
     const alignedCanvas = getAlignedCanvas(canvas);
 
-    const imageBlob = await new Promise((resolve, reject) => {
+    const originalBlob = await new Promise((resolve, reject) => {
       alignedCanvas.toBlob((blob) => {
         if (!blob) {
           reject(new Error("Couldn't export your drawing. Try again."));
@@ -254,41 +254,83 @@ export default function DrawingCanvas({ onComplete }) {
       return null;
     });
 
-    if (!imageBlob) {
+    if (!originalBlob) {
       isSubmittingRef.current = false;
       setIsSubmitting(false);
       return;
     }
 
-    const previewUrl = URL.createObjectURL(imageBlob);
-    const formData = new FormData();
-    formData.append("image", imageBlob, "drawing.png");
+    const previewUrl = URL.createObjectURL(originalBlob);
 
-    let category = "flower";
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = CANVAS_SIZE;
+    exportCanvas.height = CANVAS_SIZE;
+    const exportCtx = exportCanvas.getContext("2d");
+    exportCtx.fillStyle = "#ffffff";
+    exportCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    exportCtx.drawImage(alignedCanvas, 0, 0);
+
+    const classifierBlob = await new Promise((resolve, reject) => {
+      exportCanvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Couldn't export classifier image."));
+          return;
+        }
+        resolve(blob);
+      }, "image/png");
+    }).catch((err) => {
+      setError(err.message);
+      return null;
+    });
+
+    if (!classifierBlob) {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", classifierBlob, "drawing-white.png");
+
+    let type = null;
+    let confidence = null;
+    let predictions = [];
+    let responseOk = false;
+
     try {
-      const response = await fetch("http://127.0.0.1:8000/classify", {
+      const response = await fetch("http://localhost:8000/api/classify", {
         method: "POST",
         body: formData,
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        if (result?.results?.[0]?.label) {
-          category = result.results[0].label;
-        }
-      } else {
-        const errorBody = await response.text();
-        console.warn("Classification failed:", response.status, errorBody);
-      }
+      responseOk = response.ok;
+      const result = await response.json();
+
+      predictions = result?.predictions ?? [];
+      type = result?.type ?? predictions?.[0]?.label ?? null;
+      confidence = result?.confidence ?? predictions?.[0]?.score ?? null;
     } catch (fetchError) {
-      console.warn("Classification request failed:", fetchError);
+      console.warn("[DrawingCanvas] Classification request failed:", fetchError);
+      setError("Could not classify drawing. Please try again.");
+      setIsSubmitting(false);
+      isSubmittingRef.current = false;
+      return;
+    }
+
+    if (!responseOk) {
+      setError("Classifier rejected the request. Check backend and try again.");
+      setIsSubmitting(false);
+      isSubmittingRef.current = false;
+      return;
     }
 
     setLoadingProgress(100);
     onComplete({
-      category,
-      imageBlob,
+      imageBlob: originalBlob,
       previewUrl,
+      type,
+      confidence,
+      predictions,
     });
   };
 
