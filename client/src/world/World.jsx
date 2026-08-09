@@ -114,6 +114,14 @@ function displayCreationName(value, fallback) {
     : fallback;
 }
 
+function displayCreationNumber(creation) {
+  if (creation?.isPending) {
+    return "#?";
+  }
+
+  return `#${creation.id}`;
+}
+
 function normalizeClassification(creation) {
   return (
     creation?.classification ||
@@ -584,7 +592,7 @@ export default function World({
       {inspectedCreation && (
         <div style={informationCardStyle}>
           <div style={classLabelStyle}>
-            {inspectedInfo.label}
+            {displayCreationNumber(inspectedCreation)} · {inspectedInfo.label}
           </div>
 
           <h2
