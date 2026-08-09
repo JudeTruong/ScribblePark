@@ -20,8 +20,8 @@ export default function DrawingScreen({ onComplete }) {
   return (
     <div style={styles.page}>
       <div style={styles.backgroundLayer} />
+      <h1 style={styles.brand}>ScribblePark</h1>
       <header style={styles.header}>
-        <span style={styles.brand}>ScribblePark</span>
         <p style={styles.title}>Draw something you’d find in a park, or not :p</p>
       </header>
 
@@ -74,14 +74,15 @@ const styles = {
     boxShadow: "0 3px 10px rgba(41, 58, 36, 0.08)",
   },
   brand: {
-    display: "block",
-    marginBottom: "4px",
-    fontSize: "13px",
+    position: "relative",
+    zIndex: 1,
+    margin: "0 0 4px",
+    fontSize: "clamp(36px, 6vw, 56px)",
     fontFamily: "'Fredoka', system-ui, sans-serif",
     fontWeight: 700,
-    color: "#4d6b3b",
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
+    color: "#2f472f",
+    letterSpacing: "0.02em",
+    textAlign: "center",
   },
   title: {
     margin: 0,
