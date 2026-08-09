@@ -17,13 +17,12 @@ export default function App() {
   const [step, setStep] = useState("landing");
   const [creations, setCreations] = useState([]);
 
-  function handleAddDrawing({ previewUrl }) {
+  function handleAddDrawing({ previewUrl, category }) {
     const placement = randomPlacement();
 
     const newCreation = {
       id: `entry-${Date.now()}`,
-      name: "Flower",
-      description: "Hand-drawn flower",
+      name: category,
       imageUrl: previewUrl,
       position: placement.position,
       scale: placement.scale,

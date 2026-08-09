@@ -211,7 +211,7 @@ export default function DrawingCanvas({ onComplete }) {
     return true;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (isCanvasEmpty()) {
       setError("Draw something before planting it.");
       return;
@@ -220,19 +220,50 @@ export default function DrawingCanvas({ onComplete }) {
     const canvas = canvasRef.current;
     const alignedCanvas = getAlignedCanvas(canvas);
 
-    alignedCanvas.toBlob((imageBlob) => {
-      if (!imageBlob) {
-        setError("Couldn't export your drawing. Try again.");
-        return;
-      }
-      const previewUrl = URL.createObjectURL(imageBlob);
-      const category = classify_image(imageBlob);
-      onComplete({
-        category,
-        imageBlob,
-        previewUrl,
+    const imageBlob = await new Promise((resolve, reject) => {
+      alignedCanvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Couldn't export your drawing. Try again."));
+          return;
+        }
+        resolve(blob);
+      }, "image/png");
+    }).catch((err) => {
+      setError(err.message);
+      return null;
+    });
+
+    if (!imageBlob) return;
+
+    const previewUrl = URL.createObjectURL(imageBlob);
+    const formData = new FormData();
+    formData.append("image", imageBlob, "drawing.png");
+
+    let category = "flower";
+    try {
+      const response = await fetch("http://127.0.0.1:8000/classify", {
+        method: "POST",
+        body: formData,
       });
-    }, "image/png");
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result?.results?.[0]?.label) {
+          category = result.results[0].label;
+        }
+      } else {
+        const errorBody = await response.text();
+        console.warn("Classification failed:", response.status, errorBody);
+      }
+    } catch (fetchError) {
+      console.warn("Classification request failed:", fetchError);
+    }
+
+    onComplete({
+      category,
+      imageBlob,
+      previewUrl,
+    });
   };
 
   return (
