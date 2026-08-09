@@ -188,6 +188,13 @@ function randomPlacement(classification) {
   };
 }
 
+function displayCreationName(value) {
+  const name = value?.trim();
+  return name && name !== "Unnamed Creation"
+    ? name
+    : "Unnamed";
+}
+
 export default function App() {
   const [step, setStep] =
     useState("landing");
@@ -197,13 +204,25 @@ export default function App() {
 
   useEffect(() => {
     getCreations()
-      .then(setCreations)
+      .then((savedCreations) =>
+        setCreations(
+          savedCreations.map((creation) => ({
+            ...creation,
+            name:
+              displayCreationName(
+                creation.name ||
+                  creation.creatorName
+              ),
+          }))
+        )
+      )
       .catch(console.error);
   }, []);
 
   function handleAddDrawing({
     previewUrl,
     imageBlob,
+    creatorName,
     type,
     confidence,
     predictions = [],
@@ -217,11 +236,18 @@ export default function App() {
       normalizedClassification
     );
 
+    const displayName =
+      displayCreationName(creatorName);
+
     const temporaryId = `temporary-${Date.now()}`;
 
     const temporaryCreation = {
       id: temporaryId,
-      name: "Unnamed Creation",
+      name: displayName,
+      creatorName:
+        displayName === "Unnamed"
+          ? ""
+          : displayName,
       description:
         `Hand-drawn ${type || normalizedClassification}`,
       classification:
@@ -246,6 +272,10 @@ export default function App() {
 
     createCreation({
       classification: normalizedClassification,
+      creatorName:
+        displayName === "Unnamed"
+          ? ""
+          : displayName,
       imageBlob,
       position: placement.position,
       scale: placement.scale,
@@ -256,7 +286,11 @@ export default function App() {
             creation.id === temporaryId
               ? {
                   ...savedCreation,
-                  name: "Unnamed Creation",
+                  name:
+                    displayCreationName(
+                      savedCreation.creatorName ||
+                        displayName
+                    ),
                   description: `Hand-drawn ${normalizedClassification}`,
                   category: normalizedClassification,
                   type,
