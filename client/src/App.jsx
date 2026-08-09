@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import World from "./world/World";
-import DrawingCanvas from "./drawing/DrawingCanvas";
+import DrawingScreen from "./components/DrawingScreen";
 
 const CLASS_SETTINGS = {
   flower: {
@@ -292,6 +292,13 @@ export default function App() {
     );
   }
 
+  // "form" step now renders DrawingScreen directly — DrawingScreen owns
+  // its own full-page layout/branding, so we don't wrap it in the
+  // landing page's pageStyle/cardStyle (that would double up backgrounds).
+  if (step === "form") {
+    return <DrawingScreen onComplete={handleAddDrawing} />;
+  }
+
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
@@ -305,9 +312,7 @@ export default function App() {
             fontSize: "36px",
           }}
         >
-          {step === "landing"
-            ? "Add something to the park"
-            : "Draw your creation"}
+          Add something to the park
         </h1>
 
         <p
@@ -316,56 +321,18 @@ export default function App() {
             color: "#5f6f5f",
           }}
         >
-          {step === "landing"
-            ? "Start with a tiny idea and place it into the world."
-            : "Draw something and plant it in ScribblePark."}
+          Start with a tiny idea and place it into the world.
         </p>
 
-        {step === "landing" ? (
-          <button
-            type="button"
-            onClick={() =>
-              setStep("form")
-            }
-            style={primaryButtonStyle}
-          >
-            Add something
-          </button>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gap: "20px",
-            }}
-          >
-            <DrawingCanvas
-              onComplete={
-                handleAddDrawing
-              }
-            />
-
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                justifyContent:
-                  "flex-end",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() =>
-                  setStep("landing")
-                }
-                style={
-                  secondaryButtonStyle
-                }
-              >
-                Back
-              </button>
-            </div>
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() =>
+            setStep("form")
+          }
+          style={primaryButtonStyle}
+        >
+          Add something
+        </button>
       </div>
     </div>
   );
