@@ -225,6 +225,12 @@ export default function DrawingCanvas({ onComplete }) {
     const activeColor = isOutlinePhase ? "#000000" : color;
     const shouldDrawToLineCanvas = isOutlinePhase;
 
+    if (!isOutlinePhase && tool === "fill") {
+      floodFill(point.x, point.y);
+      if (color !== "#000000") setHasColoring(true);
+      return;
+    }
+
     applyToolSettings(ctx, activeColor, tool);
     drawDot(ctx, point.x, point.y);
 
@@ -247,7 +253,7 @@ export default function DrawingCanvas({ onComplete }) {
   };
 
   const handlePointerMove = (clientX, clientY) => {
-    if (!isDrawingRef.current || isSubmittingRef.current) return;
+    if (!isDrawingRef.current || isSubmittingRef.current || tool === "fill") return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const point = getCanvasPoint(clientX, clientY);
@@ -305,6 +311,7 @@ export default function DrawingCanvas({ onComplete }) {
     const lineCtx = lineCanvasRef.current?.getContext("2d");
     lineCtx?.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     setPhase("outline");
+    setTool("pencil");
     setHasDrawn(false);
     setHasColoring(false);
     setError("");
@@ -591,6 +598,15 @@ export default function DrawingCanvas({ onComplete }) {
         >
           Pencil
         </button>
+        {phase === "color" && (
+          <button
+            type="button"
+            onClick={() => setTool("fill")}
+            style={{ ...styles.toolButton, ...(tool === "fill" ? styles.toolButtonActive : {}) }}
+          >
+            Fill
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setTool("eraser")}
