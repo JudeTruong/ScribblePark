@@ -227,7 +227,17 @@ function FirstPersonController({ active }) {
     if (!active) return;
 
     const safeDelta = Math.min(delta, 0.1);
-    const movementSpeed = 4.5;
+    const isSprinting =
+    keys.current.ShiftLeft ||
+    keys.current.ShiftRight;
+
+    const walkingSpeed = 4.5;
+    const sprintingSpeed = 8;
+
+    const movementSpeed =
+    isSprinting
+        ? sprintingSpeed
+        : walkingSpeed;
     const gravity = 12;
 
     const movement = new THREE.Vector3();
@@ -314,11 +324,19 @@ function FirstPersonController({ active }) {
     let headBob = 0;
 
     if (isWalking && grounded.current) {
-      bobTime.current += safeDelta * 10;
+    const bobSpeed =
+        isSprinting ? 15 : 10;
 
-      headBob =
-        Math.sin(bobTime.current) * 0.045;
-    } else {
+    const bobAmount =
+        isSprinting ? 0.07 : 0.045;
+
+    bobTime.current +=
+        safeDelta * bobSpeed;
+
+    headBob =
+        Math.sin(bobTime.current) *
+        bobAmount;
+    }else {
       bobTime.current = 0;
     }
 
