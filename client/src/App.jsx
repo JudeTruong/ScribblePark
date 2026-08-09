@@ -411,37 +411,20 @@ export default function App() {
           width: "100%",
           height: "100vh",
           position: "relative",
+          background: "linear-gradient(180deg, #fef5cb 0%, #e7f0c9 100%)",
         }}
       >
-        <div
-          style={
-            floatingCardStyle
-          }
-        >
-          <h2
-            style={{
-              margin: "0 0 8px",
-            }}
-          >
-            Your park is growing
-          </h2>
+        <div style={floatingCardStyle}>
+          <h2 style={{ margin: "0 0 6px", fontSize: "18px" }}>Your park is growing</h2>
 
-          <p
-            style={{
-              margin: "0 0 12px",
-            }}
-          >
+          <p style={{ margin: "0 0 12px", lineHeight: 1.5 }}>
             {summary}
           </p>
 
           <button
             type="button"
-            onClick={() =>
-              setStep("form")
-            }
-            style={
-              secondaryButtonStyle
-            }
+            onClick={() => setStep("form")}
+            style={{ ...secondaryButtonStyle, padding: "10px 16px" }}
           >
             Add another
           </button>
@@ -469,44 +452,24 @@ export default function App() {
 
   return (
     <div style={pageStyle}>
+      <div style={backgroundLayerStyle} />
       <div style={cardStyle}>
-        <p style={eyebrowStyle}>
-          ScribblePark
-        </p>
+        <span style={eyebrowStyle}>ScribblePark</span>
 
-        <h1
-          style={{
-            margin:
-              "8px 0 12px",
-
-            fontSize: "36px",
-          }}
-        >
+        <h1 style={{ margin: "8px 0 12px", fontSize: "36px", lineHeight: 1.1 }}>
           Add something to the park
         </h1>
 
-        <p
-          style={{
-            margin:
-              "0 0 24px",
-
-            color: "#5f6f5f",
-          }}
-        >
+        <p style={{ margin: "0 0 24px", color: "#5f6f5f", lineHeight: 1.6 }}>
           Draw a creation and watch it come alive in the park.
         </p>
 
-        <button
-          type="button"
-          onClick={() =>
-            setStep("form")
-          }
-          style={
-            primaryButtonStyle
-          }
-        >
+        <button type="button" onClick={() => setStep("form")} style={primaryButtonStyle}>
           Add something
         </button>
+        <p style={{ marginTop: "14px", color: "#8b6d3f", fontSize: "13px", fontStyle: "italic" }}>
+          A sketchbook park for little summer doodles.
+        </p>
       </div>
     </div>
   );
@@ -517,49 +480,72 @@ const pageStyle = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-
-  background:
-    "linear-gradient(135deg, #f8f4e8 0%, #e5f0d9 100%)",
-
+  background: "#f7edc7",
   padding: "24px",
+  position: "relative",
+  overflow: "hidden",
+  isolation: "isolate",
+};
+
+const backgroundLayerStyle = {
+  position: "absolute",
+  inset: 0,
+  backgroundImage: [
+    "radial-gradient(circle at 20% 20%, rgba(243, 230, 164, 0.44) 0 15%, transparent 16%)",
+    "radial-gradient(circle at 80% 18%, rgba(170, 206, 132, 0.32) 0 18%, transparent 19%)",
+    "linear-gradient(120deg, #f8efbf 0%, #e6e9c2 45%, #d8e4b4 100%)",
+    "repeating-linear-gradient(0deg, rgba(255,255,255,0.08) 0 2px, transparent 2px 10px)",
+    "repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 10px)",
+  ].join(", "),
+  backgroundSize: "cover, cover, 180% 180%, 10px 10px, 10px 10px",
+  backgroundPosition: "center, center, 0% 50%, 0 0, 0 0",
+  animation: "meadowPulse 12s ease-in-out infinite",
+  opacity: 1,
+  pointerEvents: "none",
+  zIndex: 0,
 };
 
 const cardStyle = {
+  position: "relative",
+  zIndex: 1,
   width: "100%",
-  maxWidth: "540px",
-  background: "#fffdf8",
-  borderRadius: "24px",
+  maxWidth: "560px",
+  background: "#fff9e8",
+  border: "3px solid #4d6b3b",
+  borderRadius: "18px",
   padding: "28px",
-
-  boxShadow:
-    "0 16px 40px rgba(33, 53, 35, 0.16)",
+  boxShadow: "0 8px 20px rgba(33, 53, 35, 0.14)",
 };
 
 const eyebrowStyle = {
+  display: "inline-block",
   margin: 0,
-  color: "#7b9473",
+  padding: "4px 8px",
+  borderRadius: "6px",
+  background: "#f2d98b",
+  color: "#456540",
   fontWeight: 700,
-  letterSpacing: "0.18em",
+  letterSpacing: "0.12em",
   textTransform: "uppercase",
-  fontSize: "12px",
+  fontSize: "11px",
+  border: "2px solid #4d6b3b",
 };
 
 const primaryButtonStyle = {
-  border: "none",
-  borderRadius: "999px",
+  border: "2px solid #4d6b3b",
+  borderRadius: "8px",
   padding: "12px 18px",
-  background: "#315638",
-  color: "white",
+  background: "#5d8f4a",
+  color: "#fff",
   fontWeight: 700,
   cursor: "pointer",
 };
 
 const secondaryButtonStyle = {
-  border:
-    "1px solid #d4dfcf",
-  borderRadius: "999px",
-  padding: "12px 18px",
-  background: "white",
+  border: "2px solid #4d6b3b",
+  borderRadius: "8px",
+  padding: "10px 16px",
+  background: "#fffdf7",
   color: "#315638",
   fontWeight: 700,
   cursor: "pointer",
@@ -570,15 +556,10 @@ const floatingCardStyle = {
   top: "20px",
   right: "20px",
   zIndex: 20,
-
-  background:
-    "rgba(255, 253, 244, 0.95)",
-
-  padding: "16px 18px",
-  borderRadius: "16px",
-
-  boxShadow:
-    "0 10px 28px rgba(33, 53, 35, 0.16)",
-
+  background: "#fff9e8",
+  border: "2px solid #4d6b3b",
+  padding: "14px 16px",
+  borderRadius: "10px",
+  boxShadow: "0 6px 16px rgba(33, 53, 35, 0.12)",
   maxWidth: "300px",
 };

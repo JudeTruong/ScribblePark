@@ -6,3 +6,210 @@
   background: #dff2ce;
   color: #28452d;
 }
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #fef5cb 0%, #e8f2cb 45%, #dfe8b3 100%);
+}
+
+.app-shell::before {
+  content: "";
+  position: absolute;
+  inset: -15% -10% auto auto;
+  width: 280px;
+  height: 280px;
+  border: 2px dashed rgba(81, 112, 57, 0.35);
+  border-radius: 50%;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+
+.app-shell::after {
+  content: "";
+  position: absolute;
+  inset: auto auto -8% -5%;
+  width: 240px;
+  height: 240px;
+  border: 2px dashed rgba(125, 94, 54, 0.2);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.park-card {
+  position: relative;
+  width: min(100%, 560px);
+  padding: 32px 30px 28px;
+  border-radius: 28px;
+  background: rgba(255, 250, 237, 0.96);
+  border: 3px solid #4d6b3b;
+  box-shadow: 0 16px 40px rgba(39, 61, 37, 0.18);
+  overflow: hidden;
+}
+
+.park-card::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 24px;
+  height: 8px;
+  border-top: 3px solid rgba(77, 107, 59, 0.45);
+  border-bottom: 3px solid rgba(77, 107, 59, 0.45);
+  border-radius: 999px;
+  transform: rotate(-1.8deg);
+  pointer-events: none;
+}
+
+.park-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 18px 16px auto;
+  width: 90px;
+  height: 24px;
+  border-bottom: 2px solid rgba(81, 112, 57, 0.45);
+  border-radius: 999px;
+  transform: rotate(-16deg);
+  pointer-events: none;
+}
+
+.eyebrow-badge {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #f6e2a4;
+  color: #456540;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 2px solid rgba(77, 107, 59, 0.3);
+}
+
+.park-title {
+  margin: 8px 0 12px;
+  font-size: 36px;
+  line-height: 1.05;
+  color: #2c472c;
+}
+
+.park-copy {
+  margin: 0 0 24px;
+  color: #5f6f5f;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.cta-button,
+.secondary-button {
+  position: relative;
+  border: 2px solid rgba(77, 107, 59, 0.3);
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(47, 70, 45, 0.12);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.cta-button:hover,
+.secondary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(47, 70, 45, 0.16);
+}
+
+.cta-button {
+  background: linear-gradient(135deg, #5da24d 0%, #416f3a 100%);
+  color: white;
+}
+
+.secondary-button {
+  background: #fffdf7;
+  color: #315638;
+}
+
+.handwritten-note {
+  margin-top: 16px;
+  color: #8b6d3f;
+  font-size: 13px;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+.scribble-star,
+.scribble-circle,
+.scribble-arrow {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.scribble-star {
+  width: 26px;
+  height: 26px;
+  background: radial-gradient(circle, #f6d95d 0%, #f0b74a 70%, transparent 71%);
+  clip-path: polygon(50% 0%, 61% 35%, 100% 35%, 68% 56%, 82% 100%, 50% 68%, 18% 100%, 32% 56%, 0% 35%, 39% 35%);
+}
+
+.scribble-circle {
+  width: 90px;
+  height: 90px;
+  border: 2px dashed rgba(81, 112, 57, 0.45);
+  border-radius: 50%;
+}
+
+.scribble-arrow {
+  width: 64px;
+  height: 24px;
+  border-top: 2px solid rgba(81, 112, 57, 0.4);
+  border-right: 2px solid rgba(81, 112, 57, 0.4);
+  border-radius: 0 12px 0 0;
+  transform: rotate(16deg);
+}
+
+.scribble-star--one {
+  top: 10%;
+  right: 10%;
+}
+
+.scribble-circle--one {
+  bottom: 8%;
+  left: 7%;
+}
+
+.scribble-arrow--one {
+  top: 18%;
+  left: 7%;
+  transform: rotate(-16deg);
+}
+
+.park-floating-card {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 20;
+  max-width: 300px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(255, 250, 237, 0.95);
+  border: 2px solid rgba(77, 107, 59, 0.25);
+  box-shadow: 0 10px 28px rgba(33, 53, 35, 0.16);
+}
+
+.park-floating-card::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 10px;
+  height: 4px;
+  border-top: 2px solid rgba(77, 107, 59, 0.25);
+  border-radius: 999px;
+  pointer-events: none;
+}
