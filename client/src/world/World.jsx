@@ -1,23 +1,119 @@
-import { useEffect, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import AnimatedCreation from "./AnimatedCreation";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import {
+  Canvas,
+  useFrame,
+  useThree,
+} from "@react-three/fiber";
+
 import {
   OrbitControls,
   PointerLockControls,
 } from "@react-three/drei";
+
 import {
   EffectComposer,
   Pixelation,
 } from "@react-three/postprocessing";
+
 import * as THREE from "three";
 
+import AnimatedCreation from "./AnimatedCreation";
+import InteractionController from "./InteractionController";
 import Environment from "./Environment";
-
 
 const WIDE_POSITION = [0, 11, 24];
 const FIRST_PERSON_POSITION = [0, 1.4, 12];
 const WORLD_BOUNDARY = 20;
 const GROUND_HEIGHT = 1.4;
+
+const CLASS_INFO = {
+  flower: {
+    label: "Flower",
+    description:
+      "A flowering plant that can provide pollen and nectar.",
+  },
+
+  tree: {
+    label: "Tree",
+    description:
+      "A large plant that provides shelter, food and habitat.",
+  },
+
+  bush: {
+    label: "Bush",
+    description:
+      "A dense plant that provides food and cover for small animals.",
+  },
+
+  mushroom: {
+    label: "Mushroom",
+    description:
+      "A fungus that helps recycle nutrients in an ecosystem.",
+  },
+
+  rabbit: {
+    label: "Rabbit",
+    description:
+      "A herbivore known for powerful hind legs and quick hops.",
+  },
+
+  toad: {
+    label: "Toad",
+    description:
+      "An amphibian commonly found around damp habitats and ponds.",
+  },
+
+  bug: {
+    label: "Bug",
+    description:
+      "A small invertebrate that crawls through the meadow.",
+  },
+
+  snail: {
+    label: "Snail",
+    description:
+      "A slow-moving mollusc with a protective shell.",
+  },
+
+  butterfly: {
+    label: "Butterfly",
+    description:
+      "A flying insect that can help pollinate flowering plants.",
+  },
+
+  bird: {
+    label: "Bird",
+    description:
+      "A feathered animal that flies above the park.",
+  },
+
+  fish: {
+    label: "Fish",
+    description:
+      "An aquatic animal that lives and swims in the pond.",
+  },
+
+  duck: {
+    label: "Duck",
+    description:
+      "A water bird capable of swimming, walking and flying.",
+  },
+};
+
+function normalizeClassification(creation) {
+  return (
+    creation?.classification ||
+    creation?.category ||
+    "flower"
+  ).toLowerCase();
+}
 
 function FirstPersonController({ active }) {
   const { camera } = useThree();
@@ -64,12 +160,26 @@ function FirstPersonController({ active }) {
       keys.current[event.code] = false;
     }
 
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener(
+      "keydown",
+      handleKeyDown
+    );
+
+    window.addEventListener(
+      "keyup",
+      handleKeyUp
+    );
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
+
+      window.removeEventListener(
+        "keyup",
+        handleKeyUp
+      );
 
       keys.current = {};
     };
@@ -87,7 +197,7 @@ function FirstPersonController({ active }) {
 
     camera.getWorldDirection(forward);
 
-    // Ignore vertical camera tilt while moving.
+    // Ignore camera tilt while moving.
     forward.y = 0;
     forward.normalize();
 
@@ -95,51 +205,74 @@ function FirstPersonController({ active }) {
       .crossVectors(forward, camera.up)
       .normalize();
 
-    if (keys.current.KeyW || keys.current.ArrowUp) {
+    if (
+      keys.current.KeyW ||
+      keys.current.ArrowUp
+    ) {
       movement.add(forward);
     }
 
-    if (keys.current.KeyS || keys.current.ArrowDown) {
+    if (
+      keys.current.KeyS ||
+      keys.current.ArrowDown
+    ) {
       movement.sub(forward);
     }
 
-    if (keys.current.KeyD || keys.current.ArrowRight) {
+    if (
+      keys.current.KeyD ||
+      keys.current.ArrowRight
+    ) {
       movement.add(right);
     }
 
-    if (keys.current.KeyA || keys.current.ArrowLeft) {
+    if (
+      keys.current.KeyA ||
+      keys.current.ArrowLeft
+    ) {
       movement.sub(right);
     }
 
-    const isWalking = movement.lengthSq() > 0;
+    const isWalking =
+      movement.lengthSq() > 0;
 
     if (isWalking) {
       movement
         .normalize()
-        .multiplyScalar(movementSpeed * safeDelta);
+        .multiplyScalar(
+          movementSpeed * safeDelta
+        );
 
       camera.position.x += movement.x;
       camera.position.z += movement.z;
     }
 
-    // Gravity and jumping.
-    verticalVelocity.current -= gravity * safeDelta;
+    // Jumping and gravity.
+    verticalVelocity.current -=
+      gravity * safeDelta;
 
     verticalPosition.current +=
       verticalVelocity.current * safeDelta;
 
-    if (verticalPosition.current <= GROUND_HEIGHT) {
-      verticalPosition.current = GROUND_HEIGHT;
+    if (
+      verticalPosition.current <=
+      GROUND_HEIGHT
+    ) {
+      verticalPosition.current =
+        GROUND_HEIGHT;
+
       verticalVelocity.current = 0;
       grounded.current = true;
     }
 
-    // Subtle camera bob while walking.
+    // Subtle walking bob.
     let headBob = 0;
 
     if (isWalking && grounded.current) {
       bobTime.current += safeDelta * 10;
-      headBob = Math.sin(bobTime.current) * 0.045;
+
+      headBob =
+        Math.sin(bobTime.current) * 0.045;
     } else {
       bobTime.current = 0;
     }
@@ -153,7 +286,10 @@ function FirstPersonController({ active }) {
       camera.position.z
     );
 
-    if (distanceFromCentre > WORLD_BOUNDARY) {
+    if (
+      distanceFromCentre >
+      WORLD_BOUNDARY
+    ) {
       const angle = Math.atan2(
         camera.position.z,
         camera.position.x
@@ -185,14 +321,43 @@ function CameraReset({ mode }) {
   return null;
 }
 
-export default function World({ creations = [] }) {
-  const [mode, setMode] = useState("wide");
+export default function World({
+  creations = [],
+}) {
+  const [mode, setMode] =
+    useState("wide");
+
+  const [targetedId, setTargetedId] =
+    useState(null);
+
+  const [
+    inspectedCreation,
+    setInspectedCreation,
+  ] = useState(null);
+
   const canvasElement = useRef(null);
 
-  const firstPerson = mode === "firstPerson";
+  const firstPerson =
+    mode === "firstPerson";
+
+  const targetedCreation = useMemo(
+    () =>
+      creations.find(
+        (creation) =>
+          creation.id === targetedId
+      ) ?? null,
+    [creations, targetedId]
+  );
+
+  const handleTargetChange =
+    useCallback((id) => {
+      setTargetedId(id);
+    }, []);
 
   function enterFirstPerson() {
     setMode("firstPerson");
+    setTargetedId(null);
+    setInspectedCreation(null);
 
     if (canvasElement.current) {
       const lockRequest =
@@ -200,7 +365,10 @@ export default function World({ creations = [] }) {
 
       if (lockRequest?.catch) {
         lockRequest.catch((error) => {
-          console.error("Could not lock pointer:", error);
+          console.error(
+            "Could not lock pointer:",
+            error
+          );
         });
       }
     }
@@ -208,11 +376,69 @@ export default function World({ creations = [] }) {
 
   function returnToWideView() {
     setMode("wide");
+    setTargetedId(null);
+    setInspectedCreation(null);
 
     if (document.pointerLockElement) {
       document.exitPointerLock();
     }
   }
+
+  useEffect(() => {
+    function handleInspect(event) {
+      if (
+        event.code !== "KeyE" ||
+        !firstPerson ||
+        event.repeat
+      ) {
+        return;
+      }
+
+      // If a card is open, E closes it.
+      if (inspectedCreation) {
+        setInspectedCreation(null);
+        return;
+      }
+
+      // Otherwise, inspect the targeted creation.
+      if (targetedCreation) {
+        setInspectedCreation(
+          targetedCreation
+        );
+      }
+    }
+
+    window.addEventListener(
+      "keydown",
+      handleInspect
+    );
+
+    return () => {
+      window.removeEventListener(
+        "keydown",
+        handleInspect
+      );
+    };
+  }, [
+    firstPerson,
+    targetedCreation,
+    inspectedCreation,
+  ]);
+
+  const inspectedClassification =
+    inspectedCreation
+      ? normalizeClassification(
+          inspectedCreation
+        )
+      : "flower";
+
+  const inspectedInfo =
+    CLASS_INFO[inspectedClassification] ??
+    {
+      label: inspectedClassification,
+      description:
+        "A user-created resident of ScribblePark.",
+    };
 
   return (
     <div
@@ -223,7 +449,7 @@ export default function World({ creations = [] }) {
         overflow: "hidden",
       }}
     >
-      {/* Screen controls */}
+      {/* View controls */}
       <div
         style={{
           position: "absolute",
@@ -238,7 +464,8 @@ export default function World({ creations = [] }) {
       >
         {firstPerson ? (
           <div style={instructionsStyle}>
-            WASD to move · Mouse to look · Space to jump · Esc for wide view
+            WASD to move · Mouse to look ·
+            Space to jump · Esc for wide view
           </div>
         ) : (
           <button
@@ -255,11 +482,13 @@ export default function World({ creations = [] }) {
         shadows
         dpr={[1, 1.5]}
         onCreated={({ gl }) => {
-          canvasElement.current = gl.domElement;
+          canvasElement.current =
+            gl.domElement;
         }}
         gl={{
           antialias: true,
-          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMapping:
+            THREE.ACESFilmicToneMapping,
           toneMappingExposure: 1.05,
         }}
         camera={{
@@ -269,20 +498,33 @@ export default function World({ creations = [] }) {
           far: 150,
         }}
       >
-        {/* Complete environment */}
         <Environment />
 
-        {/* User-created PNG flowers */}
+        {/* Animated user drawings */}
         {creations.map((creation) => (
-        <AnimatedCreation
+          <AnimatedCreation
             key={creation.id}
             creation={creation}
-        />
+            highlighted={
+              firstPerson &&
+              creation.id === targetedId
+            }
+          />
         ))}
 
         <CameraReset mode={mode} />
 
-        <FirstPersonController active={firstPerson} />
+        <FirstPersonController
+          active={firstPerson}
+        />
+
+        {/* Detects the creation under the crosshair */}
+        <InteractionController
+          active={firstPerson}
+          onTargetChange={
+            handleTargetChange
+          }
+        />
 
         <PointerLockControls
           enabled={firstPerson}
@@ -297,15 +539,70 @@ export default function World({ creations = [] }) {
           dampingFactor={0.06}
           minDistance={12}
           maxDistance={35}
-          minPolarAngle={Math.PI / 4.5}
-          maxPolarAngle={Math.PI / 2.15}
+          minPolarAngle={
+            Math.PI / 4.5
+          }
+          maxPolarAngle={
+            Math.PI / 2.15
+          }
         />
 
-        {/* Pixelates the entire 3D scene */}
+        {/* Pixelation effect */}
         <EffectComposer multisampling={0}>
-          <Pixelation granularity={1} />
+          <Pixelation granularity={4} />
         </EffectComposer>
       </Canvas>
+
+      {/* First-person crosshair */}
+      {firstPerson && (
+        <div style={crosshairStyle}>
+          +
+        </div>
+      )}
+
+      {/* Interaction prompt */}
+      {firstPerson &&
+        targetedCreation &&
+        !inspectedCreation && (
+          <div
+            style={
+              interactionPromptStyle
+            }
+          >
+            Press E to inspect
+          </div>
+        )}
+
+      {/* Classification information card */}
+      {inspectedCreation && (
+        <div style={informationCardStyle}>
+          <div style={classLabelStyle}>
+            {inspectedInfo.label}
+          </div>
+
+          <h2
+            style={{
+              margin: "4px 0 8px",
+            }}
+          >
+            {inspectedCreation.name ||
+              inspectedInfo.label}
+          </h2>
+
+          <p
+            style={{
+              margin: 0,
+              lineHeight: 1.5,
+            }}
+          >
+            {inspectedInfo.description}
+          </p>
+
+          <div style={closeTextStyle}>
+            Press E to close
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -319,14 +616,79 @@ const buttonStyle = {
   fontSize: "15px",
   fontWeight: "700",
   cursor: "pointer",
-  boxShadow: "0 6px 20px rgba(42, 74, 45, 0.22)",
+  boxShadow:
+    "0 6px 20px rgba(42, 74, 45, 0.22)",
 };
 
 const instructionsStyle = {
   padding: "8px 12px",
   borderRadius: "10px",
-  background: "rgba(255, 253, 244, 0.88)",
+  background:
+    "rgba(255, 253, 244, 0.88)",
   color: "#315638",
   fontSize: "13px",
-  boxShadow: "0 4px 14px rgba(42, 74, 45, 0.14)",
+  boxShadow:
+    "0 4px 14px rgba(42, 74, 45, 0.14)",
+};
+
+const crosshairStyle = {
+  position: "absolute",
+  left: "50%",
+  top: "50%",
+  zIndex: 30,
+  transform:
+    "translate(-50%, -50%)",
+  color: "white",
+  fontSize: "26px",
+  fontWeight: "700",
+  textShadow:
+    "0 2px 5px rgba(0,0,0,0.7)",
+  pointerEvents: "none",
+};
+
+const interactionPromptStyle = {
+  position: "absolute",
+  left: "50%",
+  bottom: "80px",
+  zIndex: 30,
+  transform: "translateX(-50%)",
+  padding: "10px 16px",
+  borderRadius: "999px",
+  background:
+    "rgba(39, 61, 42, 0.92)",
+  color: "white",
+  fontWeight: "700",
+  pointerEvents: "none",
+};
+
+const informationCardStyle = {
+  position: "absolute",
+  right: "24px",
+  bottom: "24px",
+  zIndex: 40,
+  width: "290px",
+  padding: "20px",
+  border: "3px solid white",
+  borderRadius: "18px",
+  background:
+    "rgba(39, 61, 42, 0.95)",
+  color: "white",
+  boxShadow:
+    "0 12px 35px rgba(0,0,0,0.3)",
+  pointerEvents: "none",
+};
+
+const classLabelStyle = {
+  color: "#d8edc8",
+  fontSize: "11px",
+  fontWeight: "800",
+  letterSpacing: "0.14em",
+  textTransform: "uppercase",
+};
+
+const closeTextStyle = {
+  marginTop: "14px",
+  color: "#d8edc8",
+  fontSize: "12px",
+  fontWeight: "700",
 };
