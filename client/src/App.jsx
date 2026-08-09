@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import World from "./world/World";
 import DrawingCanvas from "./drawing/DrawingCanvas";
+import { createCreation, getCreations } from "./api/creations";
 
 const CLASS_SETTINGS = {
   flower: {
@@ -96,9 +97,9 @@ const CLASS_ALIASES = {
 };
 
 function normalizeClassification(value) {
-  const classification = (
-    value || "flower"
-  ).toLowerCase();
+    const classification = (
+      value || "flower"
+    ).toLowerCase();
 
   return (
     CLASS_ALIASES[classification] ||
@@ -193,22 +194,31 @@ export default function App() {
   const [creations, setCreations] =
     useState([]);
 
+  useEffect(() => {
+    getCreations()
+      .then(setCreations)
+      .catch(console.error);
+  }, []);
+
   function handleAddDrawing({
     previewUrl,
+    imageBlob,
     name = "Unnamed Creation",
-    classification,
+    category,
   }) {
     const normalizedClassification =
       normalizeClassification(
-        classification
+        category
       );
 
     const placement = randomPlacement(
       normalizedClassification
     );
 
-    const newCreation = {
-      id: `entry-${Date.now()}`,
+    const temporaryId = `temporary-${Date.now()}`;
+
+    const temporaryCreation = {
+      id: temporaryId,
       name,
       description:
         `Hand-drawn ${normalizedClassification}`,
@@ -224,10 +234,35 @@ export default function App() {
 
     setCreations((current) => [
       ...current,
-      newCreation,
+      temporaryCreation,
     ]);
 
     setStep("world");
+
+    createCreation({
+      classification: normalizedClassification,
+      creatorName: name === "Unnamed Creation" ? undefined : name,
+      imageBlob,
+      position: placement.position,
+      scale: placement.scale,
+    })
+      .then((savedCreation) => {
+        setCreations((current) =>
+          current.map((creation) =>
+            creation.id === temporaryId
+              ? {
+                  ...savedCreation,
+                  name,
+                  description: `Hand-drawn ${normalizedClassification}`,
+                  category: normalizedClassification,
+                }
+              : creation
+          )
+        );
+      })
+      .catch((error) => {
+        console.error("Failed to save creation:", error);
+      });
   }
 
   const summary = useMemo(() => {
