@@ -7,7 +7,6 @@ const DISPLAY_SIZE = 384;
 
 const COLOR_PRESETS = [
   "#1a1a1a", // near-black
-  "#ffffff", // white
   "#e63946", // red
   "#f4a261", // orange
   "#f9c74f", // yellow
@@ -32,6 +31,18 @@ export default function DrawingCanvas({ onComplete }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const isSubmittingRef = useRef(false);
+
+  // Load the shared page font (no-op if DrawingScreen already loaded it)
+  useEffect(() => {
+    const id = "scribblepark-font-fredoka";
+    if (document.getElementById(id)) return;
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href =
+      "https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap";
+    document.head.appendChild(link);
+  }, []);
 
   // Initialize canvas as fully transparent on mount
   useEffect(() => {
@@ -358,17 +369,17 @@ export default function DrawingCanvas({ onComplete }) {
           onClick={() => setTool("pencil")}
           style={{ ...styles.toolButton, ...(tool === "pencil" ? styles.toolButtonActive : {}) }}
         >
-          Pencil
+          ✏️ Pencil
         </button>
         <button
           type="button"
           onClick={() => setTool("eraser")}
           style={{ ...styles.toolButton, ...(tool === "eraser" ? styles.toolButtonActive : {}) }}
         >
-          Eraser
+          🧼 Eraser
         </button>
         <button type="button" onClick={handleClear} style={styles.toolButton}>
-          Clear
+          🗑️ Clear
         </button>
       </div>
 
@@ -378,6 +389,7 @@ export default function DrawingCanvas({ onComplete }) {
             key={preset}
             type="button"
             aria-label={`Select color ${preset}`}
+            title={preset}
             onClick={() => {
               setColor(preset);
               setTool("pencil");
@@ -389,16 +401,23 @@ export default function DrawingCanvas({ onComplete }) {
             }}
           />
         ))}
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => {
-            setColor(e.target.value);
-            setTool("pencil");
-          }}
-          style={styles.colorInput}
-          aria-label="Custom color picker"
-        />
+
+        {/* Custom color picker — shown as a palette icon rather than a
+            plain color square, so it reads as "pick any color" rather
+            than looking like just another preset swatch. */}
+        <label style={styles.customColorLabel} title="Pick a custom color">
+          <span style={styles.customColorSwatch}>🎨</span>
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => {
+              setColor(e.target.value);
+              setTool("pencil");
+            }}
+            style={styles.colorInput}
+            aria-label="Custom color picker"
+          />
+        </label>
       </div>
 
       {error && <p style={styles.error}>{error}</p>}
@@ -427,11 +446,11 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     gap: "16px",
-    fontFamily: "system-ui, sans-serif",
+    fontFamily: "'Fredoka', system-ui, sans-serif",
   },
   canvasFrame: {
     padding: "8px",
-    borderRadius: "12px",
+    borderRadius: "14px",
     background:
       "repeating-conic-gradient(#e5e5e5 0% 25%, #ffffff 0% 50%) 50% / 16px 16px",
     boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
@@ -440,7 +459,8 @@ const styles = {
     width: `${DISPLAY_SIZE}px`,
     height: `${DISPLAY_SIZE}px`,
     imageRendering: "pixelated",
-    borderRadius: "6px",
+    borderRadius: "8px",
+    border: "3px solid #3a4a2e",
     cursor: "crosshair",
     touchAction: "none",
     display: "block",
@@ -453,6 +473,8 @@ const styles = {
     background: "#fff",
     cursor: "pointer",
     fontSize: "14px",
+    fontFamily: "'Fredoka', system-ui, sans-serif",
+    fontWeight: 500,
   },
   toolButtonActive: {
     background: "#4d96ff",
@@ -479,12 +501,30 @@ const styles = {
     border: "2px solid #1a1a1a",
     transform: "scale(1.15)",
   },
+  customColorLabel: {
+    position: "relative",
+    display: "inline-flex",
+    cursor: "pointer",
+  },
+  customColorSwatch: {
+    width: "30px",
+    height: "30px",
+    borderRadius: "50%",
+    border: "2px dashed #a9a9a9",
+    background: "#fdfdfd",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "14px",
+  },
   colorInput: {
-    width: "32px",
-    height: "32px",
+    position: "absolute",
+    inset: 0,
+    width: "30px",
+    height: "30px",
+    opacity: 0,
     padding: 0,
     border: "none",
-    background: "none",
     cursor: "pointer",
   },
   label: { fontSize: "14px", color: "#555", marginRight: "4px" },
@@ -509,6 +549,7 @@ const styles = {
     color: "#fff",
     fontSize: "16px",
     fontWeight: 600,
+    fontFamily: "'Fredoka', system-ui, sans-serif",
     cursor: "pointer",
   },
   plantButtonDisabled: {

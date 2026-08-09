@@ -1,12 +1,27 @@
-# Godot 4+ specific ignores
-.godot/
-.nomedia
+# Dependencies
+node_modules/
 
-# Godot-specific ignores
-.import/
-export.cfg
-export_credentials.cfg
-*.tmp
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Builds
+dist/
+build/
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+
+# Temporary files
+server/uploads/
 
 # Imported translations (automatically generated from CSV files)
 *.translation
@@ -16,3 +31,7 @@ export_credentials.cfg
 data_*/
 mono_crash.*.json
 /server/.venv
+/server/node_modules
+*.env
+/server/__pycache__
+server/__pycache__/classify.cpython-313.pyc
