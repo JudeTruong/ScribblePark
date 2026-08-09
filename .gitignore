@@ -31,6 +31,7 @@ server/uploads/
 data_*/
 mono_crash.*.json
 /server/.venv
+/server/venv
 /server/node_modules
 *.env
 /server/__pycache__
