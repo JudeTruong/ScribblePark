@@ -185,7 +185,7 @@ export default function AnimatedCreation({
 
         object.position.set(
           origin.x + Math.cos(swim) * 1.35,
-          origin.y + 0.12 + Math.sin(time * 2.2) * 0.045,
+          origin.y - 0.24 + Math.sin(time * 2.2) * 0.045,
           origin.z + Math.sin(swim) * 0.7
         );
 
