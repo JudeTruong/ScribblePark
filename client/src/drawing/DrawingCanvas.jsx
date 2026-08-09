@@ -21,10 +21,11 @@ const BRUSH_SIZE = 2;
 
 export default function DrawingCanvas({ onComplete }) {
   const canvasRef = useRef(null);
+  const lineCanvasRef = useRef(null);
   const isDrawingRef = useRef(false);
   const lastPointRef = useRef(null);
 
-  const [tool, setTool] = useState("pencil"); // "pencil" | "eraser"
+  const [tool, setTool] = useState("pencil"); // "pencil" | "eraser" | "fill"
   const [color, setColor] = useState(COLOR_PRESETS[0]);
   const [hasDrawn, setHasDrawn] = useState(false);
   const [error, setError] = useState("");
@@ -49,6 +50,11 @@ export default function DrawingCanvas({ onComplete }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+    const lineCanvas = document.createElement("canvas");
+    lineCanvas.width = CANVAS_SIZE;
+    lineCanvas.height = CANVAS_SIZE;
+    lineCanvasRef.current = lineCanvas;
   }, []);
 
   // Convert a pointer event's screen coordinates into 64x64 canvas coordinates
@@ -89,10 +95,120 @@ export default function DrawingCanvas({ onComplete }) {
         ctx.fillStyle = "rgba(0,0,0,1)";
       } else {
         ctx.globalCompositeOperation = "source-over";
-        ctx.fillStyle = color;
+        ctx.fillStyle = "#1a1a1a";
       }
     },
-    [tool, color]
+    [tool]
+  );
+
+  const hexToRgb = (hex) => {
+    const normalized = hex.replace("#", "");
+    return {
+      r: parseInt(normalized.slice(0, 2), 16),
+      g: parseInt(normalized.slice(2, 4), 16),
+      b: parseInt(normalized.slice(4, 6), 16),
+    };
+  };
+
+  const isBlackLinePixel = (data, index) => {
+    return (
+      data[index + 3] > 8 &&
+      data[index] < 60 &&
+      data[index + 1] < 60 &&
+      data[index + 2] < 60
+    );
+  };
+
+  const sameFillRegion = (data, index, target) => {
+    if (isBlackLinePixel(data, index)) {
+      return false;
+    }
+
+    return (
+      Math.abs(data[index] - target.r) <= 8 &&
+      Math.abs(data[index + 1] - target.g) <= 8 &&
+      Math.abs(data[index + 2] - target.b) <= 8 &&
+      Math.abs(data[index + 3] - target.a) <= 8
+    );
+  };
+
+  const floodFill = useCallback(
+    (x, y) => {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      const imageData = ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      const { data } = imageData;
+      const startX = Math.floor(x);
+      const startY = Math.floor(y);
+
+      if (startX < 0 || startX >= CANVAS_SIZE || startY < 0 || startY >= CANVAS_SIZE) {
+        return;
+      }
+
+      const startIndex = (startY * CANVAS_SIZE + startX) * 4;
+      if (isBlackLinePixel(data, startIndex)) {
+        return;
+      }
+
+      const target = {
+        r: data[startIndex],
+        g: data[startIndex + 1],
+        b: data[startIndex + 2],
+        a: data[startIndex + 3],
+      };
+      const fillColor = hexToRgb(color);
+
+      if (
+        target.a === 255 &&
+        Math.abs(target.r - fillColor.r) <= 8 &&
+        Math.abs(target.g - fillColor.g) <= 8 &&
+        Math.abs(target.b - fillColor.b) <= 8
+      ) {
+        return;
+      }
+
+      const stack = [[startX, startY]];
+      const visited = new Uint8Array(CANVAS_SIZE * CANVAS_SIZE);
+
+      while (stack.length > 0) {
+        const [currentX, currentY] = stack.pop();
+
+        if (
+          currentX < 0 ||
+          currentX >= CANVAS_SIZE ||
+          currentY < 0 ||
+          currentY >= CANVAS_SIZE
+        ) {
+          continue;
+        }
+
+        const pixelIndex = currentY * CANVAS_SIZE + currentX;
+        if (visited[pixelIndex]) {
+          continue;
+        }
+        visited[pixelIndex] = 1;
+
+        const dataIndex = pixelIndex * 4;
+        if (!sameFillRegion(data, dataIndex, target)) {
+          continue;
+        }
+
+        data[dataIndex] = fillColor.r;
+        data[dataIndex + 1] = fillColor.g;
+        data[dataIndex + 2] = fillColor.b;
+        data[dataIndex + 3] = 255;
+
+        stack.push([currentX + 1, currentY]);
+        stack.push([currentX - 1, currentY]);
+        stack.push([currentX, currentY + 1]);
+        stack.push([currentX, currentY - 1]);
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      setHasDrawn(true);
+      setError("");
+    },
+    [color]
   );
 
   const handlePointerDown = (clientX, clientY) => {
@@ -100,8 +216,19 @@ export default function DrawingCanvas({ onComplete }) {
     const ctx = canvas.getContext("2d");
     const point = getCanvasPoint(clientX, clientY);
 
+    if (tool === "fill") {
+      floodFill(point.x, point.y);
+      return;
+    }
+
     applyToolSettings(ctx);
     drawDot(ctx, point.x, point.y);
+
+    const lineCtx = lineCanvasRef.current?.getContext("2d");
+    if (lineCtx) {
+      applyToolSettings(lineCtx);
+      drawDot(lineCtx, point.x, point.y);
+    }
 
     isDrawingRef.current = true;
     lastPointRef.current = point;
@@ -110,13 +237,20 @@ export default function DrawingCanvas({ onComplete }) {
   };
 
   const handlePointerMove = (clientX, clientY) => {
-    if (!isDrawingRef.current) return;
+    if (!isDrawingRef.current || tool === "fill") return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const point = getCanvasPoint(clientX, clientY);
 
     applyToolSettings(ctx);
     drawLine(ctx, lastPointRef.current, point);
+
+    const lineCtx = lineCanvasRef.current?.getContext("2d");
+    if (lineCtx) {
+      applyToolSettings(lineCtx);
+      drawLine(lineCtx, lastPointRef.current, point);
+    }
+
     lastPointRef.current = point;
   };
 
@@ -151,6 +285,8 @@ export default function DrawingCanvas({ onComplete }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    const lineCtx = lineCanvasRef.current?.getContext("2d");
+    lineCtx?.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     setHasDrawn(false);
     setError("");
   };
@@ -227,6 +363,32 @@ export default function DrawingCanvas({ onComplete }) {
     return alignedCanvas;
   };
 
+  const getLineArtCanvas = (canvas) => {
+    const classifierCanvas = document.createElement("canvas");
+    classifierCanvas.width = CANVAS_SIZE;
+    classifierCanvas.height = CANVAS_SIZE;
+    const ctx = classifierCanvas.getContext("2d");
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    ctx.drawImage(canvas, 0, 0);
+
+    const imageData = ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    const { data } = imageData;
+
+    for (let index = 0; index < data.length; index += 4) {
+      const value = isBlackLinePixel(data, index) ? 0 : 255;
+
+      data[index] = value;
+      data[index + 1] = value;
+      data[index + 2] = value;
+      data[index + 3] = 255;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return classifierCanvas;
+  };
+
   // Check whether any pixel has non-zero alpha (i.e. canvas isn't blank)
   const isCanvasEmpty = () => {
     const canvas = canvasRef.current;
@@ -238,10 +400,30 @@ export default function DrawingCanvas({ onComplete }) {
     return true;
   };
 
+  const isLineCanvasEmpty = () => {
+    const canvas = lineCanvasRef.current;
+    if (!canvas) {
+      return true;
+    }
+
+    const ctx = canvas.getContext("2d");
+    const { data } = ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    for (let index = 0; index < data.length; index += 4) {
+      if (isBlackLinePixel(data, index)) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
     if (isSubmittingRef.current) return;
     if (isCanvasEmpty()) {
       setError("Draw something before planting it.");
+      return;
+    }
+    if (isLineCanvasEmpty()) {
+      setError("Draw black lines before planting it.");
       return;
     }
 
@@ -250,6 +432,7 @@ export default function DrawingCanvas({ onComplete }) {
     setError("");
 
     const canvas = canvasRef.current;
+    const lineCanvas = lineCanvasRef.current;
     const alignedCanvas = getAlignedCanvas(canvas);
 
     const originalBlob = await new Promise((resolve, reject) => {
@@ -273,16 +456,11 @@ export default function DrawingCanvas({ onComplete }) {
 
     const previewUrl = URL.createObjectURL(originalBlob);
 
-    const exportCanvas = document.createElement("canvas");
-    exportCanvas.width = CANVAS_SIZE;
-    exportCanvas.height = CANVAS_SIZE;
-    const exportCtx = exportCanvas.getContext("2d");
-    exportCtx.fillStyle = "#ffffff";
-    exportCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    exportCtx.drawImage(alignedCanvas, 0, 0);
+    const alignedLineCanvas = getAlignedCanvas(lineCanvas || canvas);
+    const classifierCanvas = getLineArtCanvas(alignedLineCanvas);
 
     const classifierBlob = await new Promise((resolve, reject) => {
-      exportCanvas.toBlob((blob) => {
+      classifierCanvas.toBlob((blob) => {
         if (!blob) {
           reject(new Error("Couldn't export classifier image."));
           return;
@@ -378,6 +556,13 @@ export default function DrawingCanvas({ onComplete }) {
         >
           🧼 Eraser
         </button>
+        <button
+          type="button"
+          onClick={() => setTool("fill")}
+          style={{ ...styles.toolButton, ...(tool === "fill" ? styles.toolButtonActive : {}) }}
+        >
+          Fill
+        </button>
         <button type="button" onClick={handleClear} style={styles.toolButton}>
           🗑️ Clear
         </button>
@@ -392,12 +577,12 @@ export default function DrawingCanvas({ onComplete }) {
             title={preset}
             onClick={() => {
               setColor(preset);
-              setTool("pencil");
+              setTool("fill");
             }}
             style={{
               ...styles.swatch,
               backgroundColor: preset,
-              ...(color === preset && tool === "pencil" ? styles.swatchActive : {}),
+              ...(color === preset && tool === "fill" ? styles.swatchActive : {}),
             }}
           />
         ))}
@@ -412,7 +597,7 @@ export default function DrawingCanvas({ onComplete }) {
             value={color}
             onChange={(e) => {
               setColor(e.target.value);
-              setTool("pencil");
+              setTool("fill");
             }}
             style={styles.colorInput}
             aria-label="Custom color picker"
