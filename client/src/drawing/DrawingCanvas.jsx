@@ -31,6 +31,7 @@ export default function DrawingCanvas({ onComplete }) {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [classifierResult, setClassifierResult] = useState(null);
   const isSubmittingRef = useRef(false);
 
   // Initialize canvas as fully transparent on mount
@@ -261,34 +262,63 @@ export default function DrawingCanvas({ onComplete }) {
     }
 
     const previewUrl = URL.createObjectURL(imageBlob);
-    const formData = new FormData();
-    formData.append("image", imageBlob, "drawing.png");
+    console.log("[DrawingCanvas] Drawing blob type:", imageBlob.type);
+    console.log("[DrawingCanvas] Drawing blob size:", imageBlob.size);
+    if (imageBlob.type !== "image/png") {
+      console.warn("[DrawingCanvas] Expected image/png but got:", imageBlob.type);
+    }
 
-    let category = "flower";
+    const formData = new FormData();
+    formData.append("file", imageBlob, "drawing.png");
+
+    console.log("[DrawingCanvas] Sending drawing to classifier...");
+
+    let type = null;
+    let confidence = null;
+    let predictions = [];
+    let responseOk = false;
+
     try {
-      const response = await fetch("http://127.0.0.1:8000/classify", {
+      const response = await fetch("http://localhost:8000/api/classify", {
         method: "POST",
         body: formData,
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        if (result?.results?.[0]?.label) {
-          category = result.results[0].label;
-        }
-      } else {
-        const errorBody = await response.text();
-        console.warn("Classification failed:", response.status, errorBody);
-      }
+      responseOk = response.ok;
+      const result = await response.json();
+      console.log("[DrawingCanvas] Classifier result:", result);
+
+      predictions = result?.predictions ?? [];
+      type = result?.type ?? predictions?.[0]?.label ?? null;
+      confidence = result?.confidence ?? predictions?.[0]?.score ?? null;
     } catch (fetchError) {
-      console.warn("Classification request failed:", fetchError);
+      console.warn("[DrawingCanvas] Classification request failed:", fetchError);
+      setError("Could not classify drawing. Please try again.");
+      setIsSubmitting(false);
+      isSubmittingRef.current = false;
+      return;
     }
+
+    if (!responseOk) {
+      setError("Classifier rejected the request. Check backend and try again.");
+      setIsSubmitting(false);
+      isSubmittingRef.current = false;
+      return;
+    }
+
+    setClassifierResult({
+      type,
+      confidence,
+      predictions,
+    });
 
     setLoadingProgress(100);
     onComplete({
-      category,
       imageBlob,
       previewUrl,
+      type,
+      confidence,
+      predictions,
     });
   };
 
@@ -369,6 +399,12 @@ export default function DrawingCanvas({ onComplete }) {
       >
         {isSubmitting ? "Planting..." : "Plant in World"}
       </button>
+
+      {classifierResult?.type && (
+        <p style={styles.predictionText}>
+          Classifier result: {classifierResult.type} {classifierResult.confidence != null ? `(${Math.round(classifierResult.confidence * 100)}%)` : ""}
+        </p>
+      )}
 
       {isSubmitting && (
         <div style={styles.loadingBarBackground}>
@@ -459,6 +495,12 @@ const styles = {
     fontSize: "14px",
   },
   error: { color: "#e63946", fontSize: "13px", margin: 0 },
+  predictionText: {
+    margin: "0 0 12px",
+    color: "#264653",
+    fontSize: "15px",
+    fontWeight: 600,
+  },
   plantButton: {
     padding: "12px 28px",
     borderRadius: "999px",

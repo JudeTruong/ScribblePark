@@ -197,10 +197,13 @@ export default function App() {
     previewUrl,
     name = "Unnamed Creation",
     classification,
+    type = null,
+    confidence = null,
+    predictions = [],
   }) {
     const normalizedClassification =
       normalizeClassification(
-        classification
+        classification ?? type
       );
 
     const placement = randomPlacement(
@@ -211,11 +214,14 @@ export default function App() {
       id: `entry-${Date.now()}`,
       name,
       description:
-        `Hand-drawn ${normalizedClassification}`,
+        `Hand-drawn ${type || normalizedClassification}`,
       classification:
         normalizedClassification,
       category:
         normalizedClassification,
+      type,
+      confidence,
+      predictions,
       imageUrl: previewUrl,
       position: placement.position,
       scale: placement.scale,
@@ -267,6 +273,18 @@ export default function App() {
           >
             {summary}
           </p>
+
+          {creations.length > 0 && creations[creations.length - 1].type && (
+            <p
+              style={{
+                margin: "0 0 12px",
+                color: "#3c5d4b",
+                fontWeight: 600,
+              }}
+            >
+              Latest prediction: {creations[creations.length - 1].type} {creations[creations.length - 1].confidence != null ? `(${Math.round(creations[creations.length - 1].confidence * 100)}%)` : ""}
+            </p>
+          )}
 
           <button
             type="button"
