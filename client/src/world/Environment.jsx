@@ -133,9 +133,9 @@ function TinyFlower({ position, color = "#fff1a8" }) {
 
 function Pond() {
   const lilyPads = [
-    { position: [-1.6, 0.04, -0.4], scale: 0.35 },
-    { position: [0.3, 0.04, 0.7], scale: 0.28 },
-    { position: [1.5, 0.04, -0.3], scale: 0.4 },
+    { position: [-1.6, 0.09, -0.4], scale: 0.35 },
+    { position: [0.3, 0.09, 0.7], scale: 0.28 },
+    { position: [1.5, 0.09, -0.3], scale: 0.4 },
   ];
 
   const edgeRocks = [
