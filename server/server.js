@@ -26,9 +26,14 @@ const upload = multer({
   },
 });
 
+const allowedOrigins = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const app = express();
 app.set("trust proxy", true);
-app.use(cors({ origin: process.env.CLIENT_URL }));
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 function rowToCreation(req, row) {
