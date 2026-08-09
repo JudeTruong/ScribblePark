@@ -111,7 +111,7 @@ app.get("/api/creations/:id/image", async (req, res) => {
     ]);
     if (rows.length === 0) {
       res.status(404).json({ error: "Creation not found" });
-      return;
+      return; //hello
     }
     res.set("Content-Type", rows[0].mime_type);
     res.send(rows[0].image);
