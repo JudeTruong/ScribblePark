@@ -13,5 +13,29 @@ body,
 
 body {
   overflow: hidden;
-  font-family: Arial, sans-serif;
+  font-family: "Fredoka", "Trebuchet MS", "Comic Sans MS", cursive;
+  background: linear-gradient(180deg, #fdf3c4 0%, #f0e4b3 100%);
+  color: #2f452f;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+::selection {
+  background: #f6d95d;
+  color: #233a22;
+}
+
+@keyframes meadowPulse {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: saturate(1);
+  }
+  50% {
+    transform: translate3d(-0.8%, 0.6%, 0) scale(1.012);
+    filter: saturate(1.05);
+  }
 }

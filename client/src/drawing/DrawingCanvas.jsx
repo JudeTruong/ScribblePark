@@ -98,10 +98,10 @@ export default function DrawingCanvas({ onComplete }) {
         ctx.fillStyle = "rgba(0,0,0,1)";
       } else {
         ctx.globalCompositeOperation = "source-over";
-        ctx.fillStyle = "#1a1a1a";
+        ctx.fillStyle = color;
       }
     },
-    [tool]
+    [color, tool]
   );
 
   const hexToRgb = (hex) => {
@@ -262,13 +262,11 @@ export default function DrawingCanvas({ onComplete }) {
     lastPointRef.current = null;
   };
 
-  // Mouse events
   const onMouseDown = (e) => handlePointerDown(e.clientX, e.clientY);
   const onMouseMove = (e) => handlePointerMove(e.clientX, e.clientY);
   const onMouseUp = () => handlePointerUp();
   const onMouseLeave = () => handlePointerUp();
 
-  // Touch events
   const onTouchStart = (e) => {
     e.preventDefault();
     const touch = e.touches[0];
@@ -551,14 +549,14 @@ export default function DrawingCanvas({ onComplete }) {
           onClick={() => setTool("pencil")}
           style={{ ...styles.toolButton, ...(tool === "pencil" ? styles.toolButtonActive : {}) }}
         >
-          ✏️ Pencil
+          Pencil
         </button>
         <button
           type="button"
           onClick={() => setTool("eraser")}
           style={{ ...styles.toolButton, ...(tool === "eraser" ? styles.toolButtonActive : {}) }}
         >
-          🧼 Eraser
+          Eraser
         </button>
         <button
           type="button"
@@ -568,7 +566,7 @@ export default function DrawingCanvas({ onComplete }) {
           Fill
         </button>
         <button type="button" onClick={handleClear} style={styles.toolButton}>
-          🗑️ Clear
+          Clear
         </button>
       </div>
 
@@ -581,7 +579,6 @@ export default function DrawingCanvas({ onComplete }) {
             title={preset}
             onClick={() => {
               setColor(preset);
-              setTool("fill");
             }}
             style={{
               ...styles.swatch,
@@ -591,17 +588,13 @@ export default function DrawingCanvas({ onComplete }) {
           />
         ))}
 
-        {/* Custom color picker — shown as a palette icon rather than a
-            plain color square, so it reads as "pick any color" rather
-            than looking like just another preset swatch. */}
         <label style={styles.customColorLabel} title="Pick a custom color">
-          <span style={styles.customColorSwatch}>🎨</span>
+          <span style={styles.customColorSwatch}>C</span>
           <input
             type="color"
             value={color}
             onChange={(e) => {
               setColor(e.target.value);
-              setTool("fill");
             }}
             style={styles.colorInput}
             aria-label="Custom color picker"
@@ -649,37 +642,39 @@ const styles = {
     fontFamily: "'Fredoka', system-ui, sans-serif",
   },
   canvasFrame: {
-    padding: "8px",
-    borderRadius: "14px",
-    background:
-      "repeating-conic-gradient(#e5e5e5 0% 25%, #ffffff 0% 50%) 50% / 16px 16px",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+    padding: "10px",
+    borderRadius: "12px",
+    background: "#fff9e8",
+    border: "3px solid #4d6b3b",
+    boxShadow: "0 6px 16px rgba(41, 58, 36, 0.12)",
   },
   canvas: {
     width: `${DISPLAY_SIZE}px`,
     height: `${DISPLAY_SIZE}px`,
     imageRendering: "pixelated",
-    borderRadius: "8px",
+    borderRadius: "10px",
     border: "3px solid #3a4a2e",
     cursor: "crosshair",
     touchAction: "none",
     display: "block",
+    boxShadow: "inset 0 0 0 2px rgba(255,255,255,0.8)",
   },
-  toolRow: { display: "flex", gap: "8px" },
+  toolRow: { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" },
   toolButton: {
-    padding: "8px 16px",
+    padding: "8px 14px",
     borderRadius: "8px",
-    border: "1px solid #ccc",
-    background: "#fff",
+    border: "2px solid #4d6b3b",
+    background: "#fffdf7",
     cursor: "pointer",
     fontSize: "14px",
     fontFamily: "'Fredoka', system-ui, sans-serif",
     fontWeight: 500,
+    color: "#315638",
   },
   toolButtonActive: {
-    background: "#4d96ff",
+    background: "#5d8f4a",
     color: "#fff",
-    borderColor: "#4d96ff",
+    borderColor: "#4d6b3b",
   },
   paletteRow: {
     display: "flex",
@@ -693,13 +688,14 @@ const styles = {
     width: "28px",
     height: "28px",
     borderRadius: "50%",
-    border: "2px solid #ddd",
+    border: "2px solid #e7d4a1",
     cursor: "pointer",
     padding: 0,
+    boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
   },
   swatchActive: {
     border: "2px solid #1a1a1a",
-    transform: "scale(1.15)",
+    transform: "scale(1.12)",
   },
   customColorLabel: {
     position: "relative",
@@ -727,7 +723,6 @@ const styles = {
     border: "none",
     cursor: "pointer",
   },
-  label: { fontSize: "14px", color: "#555", marginRight: "4px" },
   plantRow: {
     display: "flex",
     gap: "10px",
@@ -742,16 +737,17 @@ const styles = {
     minWidth: 0,
     padding: "10px 12px",
     borderRadius: "8px",
-    border: "1px solid #ccc",
+    border: "2px solid #4d6b3b",
     fontSize: "14px",
     fontFamily: "'Fredoka', system-ui, sans-serif",
+    background: "#fffdf7",
   },
   error: { color: "#e63946", fontSize: "13px", margin: 0 },
   plantButton: {
     padding: "12px 28px",
-    borderRadius: "999px",
-    border: "none",
-    background: "#4caf50",
+    borderRadius: "8px",
+    border: "2px solid #4d6b3b",
+    background: "#5d8f4a",
     color: "#fff",
     fontSize: "16px",
     fontWeight: 600,
@@ -767,7 +763,7 @@ const styles = {
     width: `${DISPLAY_SIZE}px`,
     height: "10px",
     borderRadius: "999px",
-    background: "#e6e6e6",
+    background: "#ebdeae",
     overflow: "hidden",
     marginTop: "12px",
   },
