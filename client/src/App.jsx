@@ -454,16 +454,6 @@ export default function App() {
             };
           })
         );
-
-        if (
-          previewUrl?.startsWith(
-            "blob:"
-          )
-        ) {
-          URL.revokeObjectURL(
-            previewUrl
-          );
-        }
       })
       .catch((error) => {
         console.error(
