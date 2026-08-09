@@ -27,6 +27,7 @@ const upload = multer({
 });
 
 const app = express();
+app.set("trust proxy", true);
 app.use(cors({ origin: process.env.CLIENT_URL }));
 app.use(express.json());
 
